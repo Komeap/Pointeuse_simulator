@@ -29,9 +29,14 @@ public class Department {
 	//allows add a new employee in the employeeList list
 	public void addEmployee(Employee employee)
 	{
-		if (employee != null) {
-			this.employeeList.add(employee);
+		if (employee == null)
+			return;
+		for(int loop = 0; loop < employeeList.size(); loop++)
+		{
+			if(employee == employeeList.get(loop))
+				return;
 		}
+		this.employeeList.add(employee);
 	}
 
 	//allows remove a employee in the employeeList list
