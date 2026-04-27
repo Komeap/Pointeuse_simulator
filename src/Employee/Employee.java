@@ -23,5 +23,52 @@ public class Employee {
 		check = newCheck;
 	}
 
+	public void setEmployeeId(UUID employeeId) {
+		this.employeeId = employeeId;
+	}
+
+	public UUID getEmployeeId() {
+		return employeeId;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setDepartment(Department department) {
+		this.department = department;
+	}
+
+	public Department getDepartment() {
+		return department;
+	}
+
+	public void setPlanning(Planning planning) {
+		this.planning = planning;
+	}
+
+	public Planning getPlanning() {
+		return planning;
+	}
+
+	public void setCheck(Check check) {
+		this.check = check;
+	}
+
+	public Check getCheck() {
+		return check;
+	}
+
 
 }
