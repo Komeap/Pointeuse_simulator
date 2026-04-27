@@ -7,25 +7,20 @@ import java.util.UUID;
 
 public class Employee {
 
-	private UUID employeeId;
+	private final UUID employeeId;
 	private String firstName;
 	private String lastName;
 	private Department department;
 	private Planning planning;
-	private Check check;
 
-	public Employee(UUID newEmployeeId, String newFirstName, String newLastName, Department newDepartment, Planning newPlanning, Check newCheck) {
-		employeeId = newEmployeeId;
+	public Employee(String newFirstName, String newLastName, Department newDepartment, Planning newPlanning) {
+		employeeId = UUID.randomUUID();
 		firstName = newFirstName;
 		lastName = newLastName;
 		department = newDepartment;
 		planning = newPlanning;
-		check = newCheck;
 	}
 
-	public void setEmployeeId(UUID employeeId) {
-		this.employeeId = employeeId;
-	}
 
 	public UUID getEmployeeId() {
 		return employeeId;
@@ -62,13 +57,6 @@ public class Employee {
 		return planning;
 	}
 
-	public void setCheck(Check check) {
-		this.check = check;
-	}
-
-	public Check getCheck() {
-		return check;
-	}
-
 
 }
+
