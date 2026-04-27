@@ -1,3 +1,5 @@
+package Planning;
+
 import java.io.Serializable;
 import java.time.DayOfWeek;
 import java.util.HashMap;
