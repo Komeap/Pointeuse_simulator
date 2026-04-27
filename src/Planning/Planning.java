@@ -1,3 +1,4 @@
+package Planning;
 import java.time.DayOfWeek;
 import java.util.Map;
 
