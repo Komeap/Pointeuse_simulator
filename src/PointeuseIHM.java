@@ -1,13 +1,18 @@
+import Check.CheckType;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
-// test push
+import java.util.UUID;
+
+
+// Faudra import message quand il sera plus dans le dossier principale si on le bouge
+
 public class PointeuseIHM {
     public static void main(String[] args){
         JFrame pointeuse = new JFrame("Pointeuse Emulateur");
@@ -48,6 +53,13 @@ public class PointeuseIHM {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Bouton check cliqué, Il faut envoyer les donnés de pointages !!!!!!");
+                //info to send : employé, type de check, heure
+                UUID testid = null;
+                CheckType testcheck = CheckType.valueOf("out");
+                Message msg = new Message(testid, testcheck, LocalDateTime.now());
+
+                // Tu l'envoies
+                //oos.writeObject(msg);
             }
         });
 
@@ -55,12 +67,12 @@ public class PointeuseIHM {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // On récup l'elt sélec
-                String selection = (String) choixEmployer.getSelectedItem();
-                System.out.println("Vous avez sélectionné : " + selection);
+                String employe = (String) choixEmployer.getSelectedItem();
+                System.out.println("Vous avez sélectionné : " + employe);
             }
         });
 
-
+        //Action a faire chaque seconde
         Timer timer = new Timer(1000, e -> {
             // Gestion de l'heure actuelle et formatage
             LocalDateTime monHeure = LocalDateTime.now(); // prend l'heure actuelle
