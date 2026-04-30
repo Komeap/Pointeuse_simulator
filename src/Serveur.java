@@ -1,8 +1,12 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Serveur {
+    private static List<Message> archivePointages = new ArrayList<>();
+
     public static void main(String[] args) throws Exception {
         int port = 5000; // port random pour l'instant
 
@@ -16,6 +20,8 @@ public class Serveur {
             // Flux pour lire l'objet
             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
             Message msg = (Message) ois.readObject();
+
+            archivePointages.add(msg); // AJout du pointage a la list
 
             System.out.println("Données reçues : emp" + msg.getIdEmp() + ", heure" + msg.getDate() + ", check" + msg.getType());
             System.out.println("Date : " + msg.getDate());
