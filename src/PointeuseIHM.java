@@ -13,11 +13,21 @@ import java.util.UUID;
 import java.net.Socket;
 import java.io.ObjectOutputStream;
 
+import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
+
 
 // Faudra import message quand il sera plus dans le dossier principale si on le bouge
 
 public class PointeuseIHM {
+
+    private static List<Message> bufferPointages = Collections.synchronizedList(new ArrayList<>());
+
     public static void main(String[] args){
+
+        demarrerThreadEnvoi(); // Debut du thread
+
         JFrame pointeuse = new JFrame("Pointeuse Emulateur");
         pointeuse.setSize(400, 300);
         pointeuse.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -55,13 +65,13 @@ public class PointeuseIHM {
         check.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Bouton check cliqué, Il faut envoyer les donnés de pointages !!!!!!");
-                //info to send : employé, type de check, heure
                 UUID testid = UUID.randomUUID();
                 CheckType testcheck = CheckType.OUT;
                 Message msg = new Message(testid, testcheck, LocalDateTime.now());
 
-                try {
+                bufferPointages.add(msg);
+                System.out.println("Pointage mis en attente. Total dans le buffer : " + bufferPointages.size());
+                /*try {
                     Socket socket = new Socket("localhost", 5000);
 
                     ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
@@ -77,7 +87,7 @@ public class PointeuseIHM {
                 } catch (Exception ex) {
                     System.out.println("Erreur de connexion : Le serveur est-il bien lancé ?");
                     ex.printStackTrace();
-                }
+                }*/
             }
         });
 
@@ -117,5 +127,58 @@ public class PointeuseIHM {
         timer.start();
 
         pointeuse.setVisible(true);
+    }
+
+    private static void demarrerThreadEnvoi() {
+        new Thread(() -> {
+
+            while (true) {
+                try {
+                    // On endort le Thread pendant 5 secondes (5000 millisecondes)
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                // SI buffer pas vide, on le vide
+                if (!bufferPointages.isEmpty()) {
+                    System.out.println("🔄 Tentative d'envoi... (" + bufferPointages.size() + " message(s) en attente)");
+
+                    while (!bufferPointages.isEmpty()) {
+                        Message messageAEnvoyer = bufferPointages.get(0);
+                        // ON essaie de vidé si on peut
+                        try {
+                            Socket socket = new Socket("localhost", 5000);
+                            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+
+                            oos.writeObject(messageAEnvoyer);
+                            oos.flush();
+
+                            oos.close();
+                            socket.close();
+
+                            // Succès : on retire le message
+                            bufferPointages.remove(0);
+                            System.out.println("✅ Message envoyé au serveur !");
+
+                        } catch (Exception ex) {
+                            System.out.println("Serveur injoignable, Fin de la tentative, on réessayera au prochain cycle.");
+                            break;
+                        }
+                    }
+                }
+            }
+
+        }).start(); // On démarre le Thread
+    }
+
+
+
+    public static List<Message> getBufferPointages() {
+        return bufferPointages;
+    }
+
+    public static void setBufferPointages(List<Message> bufferPointages) {
+        PointeuseIHM.bufferPointages = bufferPointages;
     }
 }
