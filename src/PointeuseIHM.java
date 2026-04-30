@@ -24,6 +24,14 @@ public class PointeuseIHM {
 
     private static List<Message> bufferPointages = Collections.synchronizedList(new ArrayList<>());
 
+    static {
+        List<Message> charge = (List<Message>) testSerialisation.loadObject("buffer_pointeuse.ser");
+        if (charge != null) {
+            bufferPointages.addAll(charge);
+            System.out.println("Pointages restaurés : " + bufferPointages.size());
+        }
+    }
+
     public static void main(String[] args){
 
         demarrerThreadEnvoi(); // Debut du thread
@@ -127,6 +135,16 @@ public class PointeuseIHM {
         timer.start();
 
         pointeuse.setVisible(true);
+
+        // 2. Sauvegarder automatiquement à la fermeture (F2)
+        pointeuse.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                testSerialisation.saveObject(new ArrayList<>(bufferPointages), "buffer_pointeuse.ser");
+                System.out.println("Buffer sauvegardé avant fermeture.");
+                System.exit(0);
+            }
+        });
     }
 
     private static void demarrerThreadEnvoi() {
@@ -181,4 +199,6 @@ public class PointeuseIHM {
     public static void setBufferPointages(List<Message> bufferPointages) {
         PointeuseIHM.bufferPointages = bufferPointages;
     }
+
+
 }
