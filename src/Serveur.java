@@ -9,18 +9,19 @@ public class Serveur {
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("Serveur en attente sur le port " + port);
 
-        // Ca wait jusqu'a ce qu'il y ait une connexion
-        Socket socket = serverSocket.accept();
+        while(true){
+            // Ca wait jusqu'a ce qu'il y ait une connexion
+            Socket socket = serverSocket.accept();
 
-        // Flux pour lire l'objet
-        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-        Message msg = (Message) ois.readObject();
+            // Flux pour lire l'objet
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+            Message msg = (Message) ois.readObject();
 
-        System.out.println("Données reçues : emp" + msg.getIdEmp() + ", heure" + msg.getDate() + ", check" + msg.getType());
-        System.out.println("Date : " + msg.getDate());
+            System.out.println("Données reçues : emp" + msg.getIdEmp() + ", heure" + msg.getDate() + ", check" + msg.getType());
+            System.out.println("Date : " + msg.getDate());
 
-        ois.close();
-        socket.close();
-        serverSocket.close();
+            ois.close();
+            socket.close();
+        }
     }
 }

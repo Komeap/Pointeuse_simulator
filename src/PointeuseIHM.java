@@ -10,6 +10,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.UUID;
 
+import java.net.Socket;
+import java.io.ObjectOutputStream;
+
 
 // Faudra import message quand il sera plus dans le dossier principale si on le bouge
 
@@ -54,12 +57,27 @@ public class PointeuseIHM {
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Bouton check cliqué, Il faut envoyer les donnés de pointages !!!!!!");
                 //info to send : employé, type de check, heure
-                UUID testid = null;
-                CheckType testcheck = CheckType.valueOf("out");
+                UUID testid = UUID.randomUUID();
+                CheckType testcheck = CheckType.OUT;
                 Message msg = new Message(testid, testcheck, LocalDateTime.now());
 
-                // Tu l'envoies
-                //oos.writeObject(msg);
+                try {
+                    Socket socket = new Socket("localhost", 5000);
+
+                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+
+                    oos.writeObject(msg);
+                    oos.flush();
+
+                    System.out.println("Succès : Les données de pointage ont été envoyées !");
+
+                    oos.close();
+                    socket.close();
+
+                } catch (Exception ex) {
+                    System.out.println("Erreur de connexion : Le serveur est-il bien lancé ?");
+                    ex.printStackTrace();
+                }
             }
         });
 
