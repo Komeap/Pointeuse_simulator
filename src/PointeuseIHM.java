@@ -1,9 +1,5 @@
 import Check.CheckType;
-/*--module-path
-"C:\Users\Julien.T\Downloads\openjfx-26.0.1_windows-x64_bin-sdk\javafx-sdk-26.0.1\lib"
---add-modules
-javafx.controls,javafx.graphics
---enable-native-access=javafx.graphics*/
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.animation.Animation;
