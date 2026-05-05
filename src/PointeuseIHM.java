@@ -1,4 +1,9 @@
 import Check.CheckType;
+/*--module-path
+"C:\Users\bess7\Downloads\openjfx-26.0.1_windows-x64_bin-sdk\javafx-sdk-26.0.1\lib"
+--add-modules
+javafx.controls,javafx.graphics
+--enable-native-access=javafx.graphics*/
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -155,7 +160,7 @@ public class PointeuseIHM extends Application {
                 }
 
                 if (!bufferPointages.isEmpty()) {
-                    System.out.println("🔄 Tentative d'envoi... (" + bufferPointages.size() + " message(s) en attente)");
+                    System.out.println("Tentative d'envoi... (" + bufferPointages.size() + " message(s) en attente)");
 
                     while (!bufferPointages.isEmpty()) {
                         Message messageAEnvoyer = bufferPointages.get(0);
@@ -167,7 +172,7 @@ public class PointeuseIHM extends Application {
 
                             // Succès : on retire le message
                             bufferPointages.remove(0);
-                            System.out.println("✅ Message envoyé au serveur !");
+                            System.out.println("Message envoyé au serveur !");
 
                         } catch (Exception ex) {
                             System.out.println("Serveur injoignable. Fin de la tentative, on réessayera au prochain cycle.");

@@ -7,6 +7,10 @@ public class Serveur {
     private static List<Message> historiqueGlobal = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
+
+        List<Message> charge = (List<Message>) testSerialisation.loadObject("base_centrale.ser");
+        if (charge != null)
+            historiqueGlobal.addAll(charge);
         int port = 5000; // port random pour l'instant
 
         ServerSocket serverSocket = new ServerSocket(port);
