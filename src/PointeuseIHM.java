@@ -4,6 +4,7 @@ import Check.CheckType;
 --add-modules
 javafx.controls,javafx.graphics
 --enable-native-access=javafx.graphics*/
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.animation.Animation;
