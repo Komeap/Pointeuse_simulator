@@ -1,30 +1,47 @@
 import Check.CheckType;
+/*--module-path
+"C:\Users\Julien.T\Downloads\openjfx-26.0.1_windows-x64_bin-sdk\javafx-sdk-26.0.1\lib"
+--add-modules
+javafx.controls,javafx.graphics
+--enable-native-access=javafx.graphics*/
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import java.net.Socket;
-import java.io.ObjectOutputStream;
-
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.List;
-
-
-// Faudra import message quand il sera plus dans le dossier principale si on le bouge
-
-public class PointeuseIHM {
+public class PointeuseIHM extends Application {
 
     private static List<Message> bufferPointages = Collections.synchronizedList(new ArrayList<>());
 
+    // Bloc statique pour charger la sauvegarde au lancement de la classe
     static {
+        @SuppressWarnings("unchecked")
         List<Message> charge = (List<Message>) testSerialisation.loadObject("buffer_pointeuse.ser");
         if (charge != null) {
             bufferPointages.addAll(charge);
@@ -32,166 +49,145 @@ public class PointeuseIHM {
         }
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
+        // Lance l'application JavaFX
+        launch(args);
+    }
 
-        demarrerThreadEnvoi(); // Debut du thread
+    @Override
+    public void start(Stage primaryStage) {
+        // Démarrage du thread d'envoi en arrière-plan
+        demarrerThreadEnvoi();
 
-        JFrame pointeuse = new JFrame("Pointeuse Emulateur");
-        pointeuse.setSize(400, 300);
-        pointeuse.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        pointeuse.setLayout(new BorderLayout());
+        primaryStage.setTitle("Pointeuse Emulateur");
 
-        // affichage de la date et heure
-        JLabel labelDate = new JLabel("Chargement...", SwingConstants.CENTER);
-        labelDate.setFont(new Font("Arial", Font.PLAIN, 20));
+        // Affichage de la date et de l'heure
+        Label labelDate = new Label("Chargement...");
+        labelDate.setFont(Font.font("Arial", 20));
 
-        JLabel labelHeure = new JLabel("Chargement...", SwingConstants.CENTER);
-        labelHeure.setFont(new Font("Arial", Font.BOLD, 24));
+        Label labelHeure = new Label("Chargement...");
+        labelHeure.setFont(Font.font("Arial", FontWeight.BOLD, 24));
 
-        JLabel labelRoundHeure = new JLabel("", SwingConstants.CENTER);
-        labelRoundHeure.setFont(new Font("Arial", Font.PLAIN, 12));
+        Label labelRoundHeure = new Label("");
+        labelRoundHeure.setFont(Font.font("Arial", 12));
 
-        String[] options = {"Pierre Cointre", "Tiago Espitalier", "Julien Toulzac"};
-        JComboBox<String> choixEmployer = new JComboBox<>(options);
+        // Liste déroulante des employés
+        ComboBox<String> choixEmployer = new ComboBox<>(FXCollections.observableArrayList(
+                "Pierre Cointre", "Tiago Espitalier", "Julien Toulzac"
+        ));
+        choixEmployer.getSelectionModel().selectFirst(); // Sélectionne le premier par défaut
 
-        JButton check = new JButton("Check in/out");
+        Button check = new Button("Check in/out");
 
-        JPanel panneauTemps = new JPanel(new GridLayout(3, 1));
-        panneauTemps.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
-        panneauTemps.add(labelDate);
-        panneauTemps.add(labelHeure);
-        panneauTemps.add(labelRoundHeure);
+        // Panneau central (Temps) avec un VBox
+        VBox panneauTemps = new VBox(10); // Espacement de 10px entre les éléments
+        panneauTemps.setAlignment(Pos.CENTER);
+        panneauTemps.setPadding(new Insets(20, 0, 0, 0));
+        panneauTemps.getChildren().addAll(labelDate, labelHeure, labelRoundHeure);
 
-        JPanel panneauControles = new JPanel();
-        panneauControles.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
-        panneauControles.add(choixEmployer);
-        panneauControles.add(check);
+        // Panneau du bas (Contrôles) avec un HBox
+        HBox panneauControles = new HBox(15); // Espacement de 15px entre les éléments
+        panneauControles.setAlignment(Pos.CENTER);
+        panneauControles.setPadding(new Insets(0, 0, 20, 0));
+        panneauControles.getChildren().addAll(choixEmployer, check);
 
-        pointeuse.add(panneauTemps, BorderLayout.CENTER);
-        pointeuse.add(panneauControles, BorderLayout.SOUTH);
+        // Disposition principale
+        BorderPane root = new BorderPane();
+        root.setCenter(panneauTemps);
+        root.setBottom(panneauControles);
 
-        check.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                UUID testid = UUID.randomUUID();
-                CheckType testcheck = CheckType.OUT;
-                Message msg = new Message(testid, testcheck, LocalDateTime.now());
+        // Événement sur le bouton
+        check.setOnAction(e -> {
+            UUID testid = UUID.randomUUID();
+            CheckType testcheck = CheckType.OUT;
+            Message msg = new Message(testid, testcheck, LocalDateTime.now());
 
-                bufferPointages.add(msg);
-                System.out.println("Pointage mis en attente. Total dans le buffer : " + bufferPointages.size());
-                /*try {
-                    Socket socket = new Socket("localhost", 5000);
-
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-
-                    oos.writeObject(msg);
-                    oos.flush();
-
-                    System.out.println("Succès : Les données de pointage ont été envoyées !");
-
-                    oos.close();
-                    socket.close();
-
-                } catch (Exception ex) {
-                    System.out.println("Erreur de connexion : Le serveur est-il bien lancé ?");
-                    ex.printStackTrace();
-                }*/
-            }
+            bufferPointages.add(msg);
+            System.out.println("Pointage mis en attente. Total dans le buffer : " + bufferPointages.size());
         });
 
-        choixEmployer.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // On récup l'elt sélec
-                String employe = (String) choixEmployer.getSelectedItem();
-                System.out.println("Vous avez sélectionné : " + employe);
-            }
+        // Événement sur la liste déroulante
+        choixEmployer.setOnAction(e -> {
+            String employe = choixEmployer.getValue();
+            System.out.println("Vous avez sélectionné : " + employe);
         });
 
-        //Action a faire chaque seconde
-        Timer timer = new Timer(1000, e -> {
-            // Gestion de l'heure actuelle et formatage
-            LocalDateTime monHeure = LocalDateTime.now(); // prend l'heure actuelle
-            DateTimeFormatter formateurH = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.FRENCH); // création du mask format
-            String localHourString = monHeure.format(formateurH); // mise au format
-            labelHeure.setText(localHourString); // met a jour la variable du label
+        // JavaFX Timeline (remplace le javax.swing.Timer) exécuté chaque seconde
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            LocalDateTime monHeure = LocalDateTime.now();
 
-            // Gestion de la date actuelle et formatage
-            LocalDateTime maDate = LocalDateTime.now();
+            // Heure exacte
+            DateTimeFormatter formateurH = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.FRENCH);
+            labelHeure.setText(monHeure.format(formateurH));
+
+            // Date exacte
             DateTimeFormatter formateur = DateTimeFormatter.ofPattern("EEEE d MMMM, yyyy", Locale.FRENCH);
-            String localDateString = maDate.format(formateur);
-            labelDate.setText(localDateString);
+            labelDate.setText(monHeure.format(formateur));
 
-            // Gestion de l'heure arrondie au qart d'heure le plus proche actiuelle et formatage
-            int modulo = monHeure.getMinute()%15; // recup la dif d'heure entre actuelle et le quart d'heure le plus proche
-            int minutesToAdd = (modulo < 8) ? -modulo : (15 - modulo); // met une variavble a lheure qu'il faut ajouter celon le quart d'heure
-            LocalDateTime roundedHour =  monHeure.plusMinutes(minutesToAdd).truncatedTo(ChronoUnit.MINUTES); // arrondisement avec les minutes a ajouter pour arriver au quart d'heure
-            DateTimeFormatter formateurHR = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.FRENCH); // format
-            String roundedHourString = "Contabilisé a l'heure : " + roundedHour.format(formateurHR); // ajout du texte
-            labelRoundHeure.setText(roundedHourString); // mise  a jour de la variable
+            // Heure arrondie au quart d'heure
+            int modulo = monHeure.getMinute() % 15;
+            int minutesToAdd = (modulo < 8) ? -modulo : (15 - modulo);
+            LocalDateTime roundedHour = monHeure.plusMinutes(minutesToAdd).truncatedTo(ChronoUnit.MINUTES);
+            DateTimeFormatter formateurHR = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.FRENCH);
+            labelRoundHeure.setText("Comptabilisé à l'heure : " + roundedHour.format(formateurHR));
+        }));
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
 
-
+        // 2. Sauvegarder automatiquement à la fermeture de la fenêtre
+        primaryStage.setOnCloseRequest(e -> {
+            testSerialisation.saveObject(new ArrayList<>(bufferPointages), "buffer_pointeuse.ser");
+            System.out.println("Buffer sauvegardé avant fermeture.");
+            Platform.exit(); // Arrête proprement JavaFX
+            System.exit(0);  // Arrête le processus entier (dont le Thread d'envoi)
         });
-        timer.start();
 
-        pointeuse.setVisible(true);
-
-        // 2. Sauvegarder automatiquement à la fermeture (F2)
-        pointeuse.addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent e) {
-                testSerialisation.saveObject(new ArrayList<>(bufferPointages), "buffer_pointeuse.ser");
-                System.out.println("Buffer sauvegardé avant fermeture.");
-                System.exit(0);
-            }
-        });
+        // Création et affichage de la scène
+        Scene scene = new Scene(root, 400, 300);
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 
     private static void demarrerThreadEnvoi() {
-        new Thread(() -> {
-
+        Thread threadEnvoi = new Thread(() -> {
             while (true) {
                 try {
-                    // On endort le Thread pendant 5 secondes (5000 millisecondes)
-                    Thread.sleep(5000);
+                    Thread.sleep(5000); // 5 secondes
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                    break; // Sécurité pour quitter le thread si interrompu
                 }
 
-                // SI buffer pas vide, on le vide
                 if (!bufferPointages.isEmpty()) {
                     System.out.println("🔄 Tentative d'envoi... (" + bufferPointages.size() + " message(s) en attente)");
 
                     while (!bufferPointages.isEmpty()) {
                         Message messageAEnvoyer = bufferPointages.get(0);
-                        // ON essaie de vidé si on peut
-                        try {
-                            Socket socket = new Socket("localhost", 5000);
-                            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                        try (Socket socket = new Socket("localhost", 5000);
+                             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream())) {
 
                             oos.writeObject(messageAEnvoyer);
                             oos.flush();
-
-                            oos.close();
-                            socket.close();
 
                             // Succès : on retire le message
                             bufferPointages.remove(0);
                             System.out.println("✅ Message envoyé au serveur !");
 
                         } catch (Exception ex) {
-                            System.out.println("Serveur injoignable, Fin de la tentative, on réessayera au prochain cycle.");
-                            break;
+                            System.out.println("Serveur injoignable. Fin de la tentative, on réessayera au prochain cycle.");
+                            break; // On sort de la boucle interne pour patienter à nouveau 5 secondes
                         }
                     }
                 }
             }
+        });
 
-        }).start(); // On démarre le Thread
+        // Permet au Thread de s'arrêter automatiquement si l'application JavaFX se ferme
+        threadEnvoi.setDaemon(true);
+        threadEnvoi.start();
     }
 
-
-
+    // Getters et Setters
     public static List<Message> getBufferPointages() {
         return bufferPointages;
     }
@@ -199,6 +195,4 @@ public class PointeuseIHM {
     public static void setBufferPointages(List<Message> bufferPointages) {
         PointeuseIHM.bufferPointages = bufferPointages;
     }
-
-
 }
