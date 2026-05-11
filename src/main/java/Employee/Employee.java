@@ -67,4 +67,9 @@ public class Employee {
 	public Planning getPlanning() {
 		return planning;
 	}
+
+	@Override
+	public String toString() {
+		return firstName + " " + lastName;
+	}
 }
