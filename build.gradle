@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0' // Pour javaFX
+}
+
+group = 'fr.tonprojet'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+// Configuration de JavaFX
+javafx {
+    version = "22"
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
+}
+
+dependencies {
+    // Ajouter les librairies et les dépendance ici !!!
+}
