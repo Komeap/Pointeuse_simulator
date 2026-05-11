@@ -43,7 +43,7 @@ public class PointeuseIHM extends Application {
     // Bloc statique pour charger la sauvegarde au lancement de la classe
     static {
         @SuppressWarnings("unchecked")
-        List<Message> charge = (List<Message>) testSerialisation.loadObject("buffer_pointeuse.ser");
+        List<Message> charge = (List<Message>) Serialisation.loadObject("buffer_pointeuse.ser");
         if (charge != null) {
             bufferPointages.addAll(charge);
             System.out.println("Pointages restaurés : " + bufferPointages.size());
@@ -137,7 +137,7 @@ public class PointeuseIHM extends Application {
 
         // 2. Sauvegarder automatiquement à la fermeture de la fenêtre
         primaryStage.setOnCloseRequest(e -> {
-            testSerialisation.saveObject(new ArrayList<>(bufferPointages), "buffer_pointeuse.ser");
+            Serialisation.saveObject(new ArrayList<>(bufferPointages), "buffer_pointeuse.ser");
             System.out.println("Buffer sauvegardé avant fermeture.");
             Platform.exit(); // Arrête proprement JavaFX
             System.exit(0);  // Arrête le processus entier (dont le Thread d'envoi)
@@ -153,7 +153,7 @@ public class PointeuseIHM extends Application {
         Thread threadEnvoi = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(5000); // 5 secondes
+                    Thread.sleep(5001); // 5 secondes
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     break; // Sécurité pour quitter le thread si interrompu
@@ -164,7 +164,7 @@ public class PointeuseIHM extends Application {
 
                     while (!bufferPointages.isEmpty()) {
                         Message messageAEnvoyer = bufferPointages.get(0);
-                        try (Socket socket = new Socket("localhost", 5000);
+                        try (Socket socket = new Socket("localhost", 5001);
                              ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream())) {
 
                             oos.writeObject(messageAEnvoyer);

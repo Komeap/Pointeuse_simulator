@@ -8,10 +8,10 @@ public class Serveur {
 
     public static void main(String[] args) throws Exception {
 
-        List<Message> charge = (List<Message>) testSerialisation.loadObject("base_centrale.ser");
+        List<Message> charge = (List<Message>) Serialisation.loadObject("base_centrale.ser");
         if (charge != null)
             historiqueGlobal.addAll(charge);
-        int port = 5000; // port random pour l'instant
+        int port = 5001; // port random pour l'instant
 
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("Serveur en attente sur le port " + port);
@@ -27,7 +27,7 @@ public class Serveur {
                 historiqueGlobal.add(msg);
 
                 // Sauvegarde immédiate ou périodique (F2)
-                testSerialisation.saveObject(historiqueGlobal, "base_centrale.ser");
+                Serialisation.saveObject(historiqueGlobal, "base_centrale.ser");
 
                 System.out.println("Pointage reçu et sauvegardé pour l'employé : " + msg.getIdEmp());
             }
