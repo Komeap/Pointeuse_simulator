@@ -1,21 +1,21 @@
 package AppliCationPrincipale;
 
+import Check.Check;
+import Check.CheckType;
 import Employee.Employee;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-import java.awt.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.UUID;
 
 public class PrincipalIHM extends Application {
 
@@ -24,185 +24,92 @@ public class PrincipalIHM extends Application {
 
         BorderPane root = new BorderPane();
 
-        /*
-         * NAVBAR
-         */
+        /* ================= NAVBAR ================= */
 
-        Button btnEmployee = new Button("Gestion des employées");
-        Button btnPointage = new Button("Gestion des pointages");
+        Button btnEmployee = new Button("Employés");
+        Button btnPointage = new Button("Pointages");
         Button btnParameter = new Button("Paramètres");
 
-        btnEmployee.getStyleClass().add("nav-button");
-        btnPointage.getStyleClass().add("nav-button");
-        btnParameter.getStyleClass().add("nav-button");
-
-        HBox navbar = new HBox(
-                btnEmployee,
-                btnPointage,
-                btnParameter
-        );
-
+        HBox navbar = new HBox(btnEmployee, btnPointage, btnParameter);
         navbar.getStyleClass().add("navbar");
-        /*
-         * TABLE POINTAGES
-         */
-        TableView<Check> tablePointage = new TableView<>();
 
-        // Colonnes
-        TableColumn<Employee, String> colId =
-                new TableColumn<>("UUID");
-
-        TableColumn<Employee, String> colFirstName =
-                new TableColumn<>("Date");
-
-        TableColumn<Employee, String> colLastName =
-                new TableColumn<>("Time");
-
-        TableColumn<Employee, String> colDepartment =
-                new TableColumn<>("Département");
-
-        /*
-         * TABLE EMPLOYEES
-         */
+        /* ================= TABLE EMPLOYEES ================= */
 
         TableView<Employee> tableEmployee = new TableView<>();
 
-        // Colonnes
-        TableColumn<Employee, String> colId =
-                new TableColumn<>("UUID");
+        TableColumn<Employee, String> colEmpId = new TableColumn<>("UUID");
+        TableColumn<Employee, String> colFirstName = new TableColumn<>("Prénom");
+        TableColumn<Employee, String> colLastName = new TableColumn<>("Nom");
+        TableColumn<Employee, String> colDepartment = new TableColumn<>("Département");
 
-        TableColumn<Employee, String> colFirstName =
-                new TableColumn<>("Prénom");
+        colEmpId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
+        colFirstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
+        colLastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
+        colDepartment.setCellValueFactory(new PropertyValueFactory<>("department"));
 
-        TableColumn<Employee, String> colLastName =
-                new TableColumn<>("Nom");
+        tableEmployee.getColumns().addAll(colEmpId, colFirstName, colLastName, colDepartment);
 
-        TableColumn<Employee, String> colDepartment =
-                new TableColumn<>("Département");
+        ObservableList<Employee> employeeList =
+                FXCollections.observableArrayList(
+                        new Employee("Jean", "Dupont", null, null),
+                        new Employee("Marie", "Leroy", null, null),
+                        new Employee("Lucas", "Martin", null, null)
+                );
 
-        // Liaison getters
-        colId.setCellValueFactory(
-                new PropertyValueFactory<>("employeeId")
-        );
-
-        colFirstName.setCellValueFactory(
-                new PropertyValueFactory<>("firstName")
-        );
-
-        colLastName.setCellValueFactory(
-                new PropertyValueFactory<>("lastName")
-        );
-
-        colDepartment.setCellValueFactory(
-                new PropertyValueFactory<>("department")
-        );
-
-
-        // Ajouter colonnes
-        tableEmployee.getColumns().addAll(
-                colId,
-                colFirstName,
-                colLastName,
-                colDepartment
-        );
-
-        // Resize auto
-        tableEmployee.setColumnResizePolicy(
-                TableView.CONSTRAINED_RESIZE_POLICY
-        );
-
-        /*
-         * DONNÉES
-         */
-
-        ObservableList<Employee> employees =
-                FXCollections.observableArrayList(new Employee("Jean", "Dupont", null, null));
-        tableEmployee.setItems(employees);
+        tableEmployee.setItems(employeeList);
         tableEmployee.setPrefHeight(500);
-        tableEmployee.setPrefWidth(800);
-        /*
-         * PAGE EMPLOYEE
-         */
+        tableEmployee.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        VBox pageEmployee = new VBox(10);
+        VBox pageEmployee = new VBox(10, new Label("Employés"), tableEmployee);
 
-        pageEmployee.getChildren().addAll(
-                new Label("Gestion des employés"),
-                tableEmployee
-        );
+        /* ================= TABLE POINTAGE ================= */
 
+        TableView<Check> tablePointage = new TableView<>();
 
-        /*
-         * PAGE POINTAGE
-         */
+        TableColumn<Check, UUID> colEmpUUID = new TableColumn<>("Employé");
+        TableColumn<Check, LocalDate> colDate = new TableColumn<>("Date");
+        TableColumn<Check, LocalTime> colTime = new TableColumn<>("Heure");
+        TableColumn<Check, CheckType> colType = new TableColumn<>("Type");
 
-        VBox pagePointage = new VBox(
-                new Label("Pointage")
-        );
+        colEmpUUID.setCellValueFactory(new PropertyValueFactory<>("employeeUUID"));
+        colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
+        colTime.setCellValueFactory(new PropertyValueFactory<>("time"));
+        colType.setCellValueFactory(new PropertyValueFactory<>("checkType"));
 
-        /*
-         * PAGE PARAMETER
-         */
+        tablePointage.getColumns().addAll(colEmpUUID, colDate, colTime, colType);
 
-        VBox pageParameter = new VBox(
-                new Label("Paramètres")
-        );
+        ObservableList<Check> checkList =
+                FXCollections.observableArrayList(
+                        new Check(LocalDate.now(), LocalTime.of(8, 0), CheckType.IN, UUID.randomUUID()),
+                        new Check(LocalDate.now(), LocalTime.of(12, 0), CheckType.OUT, UUID.randomUUID()),
+                        new Check(LocalDate.now(), LocalTime.of(13, 0), CheckType.IN, UUID.randomUUID()),
+                        new Check(LocalDate.now(), LocalTime.of(17, 30), CheckType.OUT, UUID.randomUUID())
+                );
 
-        pageEmployee.getStyleClass().add("page1");
-        pagePointage.getStyleClass().add("page2");
-        pageParameter.getStyleClass().add("page3");
+        tablePointage.setItems(checkList);
+        tablePointage.setPrefHeight(500);
+        tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        /*
-         * BOUTONS
-         */
+        VBox pagePointage = new VBox(10, new Label("Pointages"), tablePointage);
 
-        btnEmployee.setOnAction(
-                e -> root.setCenter(pageEmployee)
-        );
+        VBox pageParameter = new VBox(new Label("Paramètres"));
 
-        btnPointage.setOnAction(
-                e -> root.setCenter(pagePointage)
-        );
+        /* ================= NAV ACTIONS ================= */
 
-        btnParameter.setOnAction(
-                e -> root.setCenter(pageParameter)
-        );
+        btnEmployee.setOnAction(e -> root.setCenter(pageEmployee));
+        btnPointage.setOnAction(e -> root.setCenter(pagePointage));
+        btnParameter.setOnAction(e -> root.setCenter(pageParameter));
 
-        /*
-         * ROOT
-         */
+        /* ================= ROOT ================= */
 
         root.setTop(navbar);
-
         root.setCenter(pageEmployee);
 
-        /*
-         * FENÊTRE
-         */
-
-        Dimension dimension =
-                Toolkit.getDefaultToolkit().getScreenSize();
-
-        int width = (int) dimension.getWidth();
-
-        int height = (int) dimension.getHeight();
-
-        Scene scene = new Scene(
-                root,
-                width,
-                height - 80
-        );
-
-        scene.getStylesheets().add(
-                getClass()
-                        .getResource("style.css")
-                        .toExternalForm()
-        );
+        Scene scene = new Scene(root, 1000, 600);
+        scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
 
         stage.setTitle("Application");
-
         stage.setScene(scene);
-
         stage.show();
     }
 
