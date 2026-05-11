@@ -1,5 +1,6 @@
 package AppliCationPrincipale;
 
+import Check.Check;
 import Employee.Employee;
 
 import javafx.application.Application;
@@ -57,17 +58,93 @@ public class PrincipalIHM extends Application {
         TableView<Check> tablePointage = new TableView<>();
 
         // Colonnes
-        TableColumn<Employee, String> colId =
+        TableColumn<Check, String> colId =
                 new TableColumn<>("UUID");
 
-        TableColumn<Employee, String> colFirstName =
+        TableColumn<Check, String> colDate =
                 new TableColumn<>("Date");
 
-        TableColumn<Employee, String> colLastName =
+        TableColumn<Check, String> colTime =
                 new TableColumn<>("Time");
 
-        TableColumn<Employee, String> colDepartment =
-                new TableColumn<>("Département");
+        TableColumn<Check, String> colType =
+                new TableColumn<>("Type");
+
+        colId.setCellValueFactory(
+                new PropertyValueFactory<>("employeeUUID")
+        );
+
+        colDate.setCellValueFactory(
+                new PropertyValueFactory<>("date")
+        );
+
+        colTime.setCellValueFactory(
+                new PropertyValueFactory<>("time")
+        );
+
+        colType.setCellValueFactory(
+                new PropertyValueFactory<>("type")
+        );
+
+
+        // Ajouter colonnes
+        tablePointage.getColumns().addAll(
+                colId,
+                colDate,
+                colTime,
+                colType
+        );
+
+        // Resize auto
+        tablePointage.setColumnResizePolicy(
+                TableView.CONSTRAINED_RESIZE_POLICY
+        );
+
+        /*
+         * DONNÉES
+         */
+
+        ObservableList<Employee> employees =
+                FXCollections.observableArrayList(
+
+                        new Check(
+                                LocalDate.of(2026, 5, 10),
+                                LocalTime.of(8, 0),
+                                CheckType.IN,
+                                UUID.randomUUID()
+                        ),
+
+                        new Check(
+                                LocalDate.of(2026, 5, 10),
+                                LocalTime.of(12, 0),
+                                CheckType.OUT,
+                                UUID.randomUUID()
+                        ),
+
+                        new Check(
+                                LocalDate.of(2026, 5, 10),
+                                LocalTime.of(13, 0),
+                                CheckType.IN,
+                                UUID.randomUUID()
+                        ),
+
+                        new Check(
+                                LocalDate.of(2026, 5, 10),
+                                LocalTime.of(17, 30),
+                                CheckType.OUT,
+                                UUID.randomUUID()
+                        ),
+
+                        new Check(
+                                LocalDate.of(2026, 5, 11),
+                                LocalTime.of(8, 15),
+                                CheckType.IN,
+                                UUID.randomUUID()
+                        ));
+
+        tablePointage.setItems(employees);
+        tablePointage.setPrefHeight(500);
+        tablePointage.setPrefWidth(800);
 
         /*
          * TABLE EMPLOYEES
@@ -126,8 +203,7 @@ public class PrincipalIHM extends Application {
         ObservableList<Employee> employees =
                 FXCollections.observableArrayList(
 
-                        new Employee("Jean", "Dupont", null, null),
-                        );
+                        new Employee("Jean", "Dupont", null, null));
 
         tableEmployee.setItems(employees);
         tableEmployee.setPrefHeight(500);
