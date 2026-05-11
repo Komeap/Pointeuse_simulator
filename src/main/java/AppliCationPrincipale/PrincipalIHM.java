@@ -106,7 +106,7 @@ public class PrincipalIHM extends Application {
         root.setCenter(pageEmployee);
 
         Scene scene = new Scene(root, 1000, 600);
-        scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
 
         stage.setTitle("Application");
         stage.setScene(scene);
