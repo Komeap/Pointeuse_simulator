@@ -13,7 +13,7 @@ public class MainServeur {
         monServeur.demarrer();
 
         System.out.println("Le serveur autonome est en cours d'exécution...");
-
+//aj
         // Blocage pour éviter que le programme 'main' ne s'arrête immédiatement
         Thread.currentThread().join();
     }
