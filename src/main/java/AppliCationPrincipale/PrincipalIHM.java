@@ -30,6 +30,7 @@ public class PrincipalIHM extends Application {
 
         /* BACKEND */
         GestionPointage gestionPointage = new GestionPointage();
+        GestionEmployee gestionEmployee = new GestionEmployee();
 
         Serveur monServeur = new Serveur(gestionPointage);
         monServeur.demarrer();
@@ -63,14 +64,7 @@ public class PrincipalIHM extends Application {
 
         tableEmployee.getColumns().addAll(colEmpId, colFirstName, colLastName, colDepartment);
 
-        ObservableList<Employee> employeeList =
-                FXCollections.observableArrayList(
-                        new Employee("Jean", "Dupont", null, null),
-                        new Employee("Marie", "Leroy", null, null),
-                        new Employee("Lucas", "Martin", null, null)
-                );
-
-        tableEmployee.setItems(employeeList);
+        tableEmployee.setItems(gestionEmployee.getEmployeeList());
         tableEmployee.setPrefHeight(500);
         tableEmployee.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -78,11 +72,19 @@ public class PrincipalIHM extends Application {
         Button btnEditEmployee = new Button("Modify Employee");
         Button btnDeleteEmployee = new Button("Delete Employee");
 
-        btnAddEmployee.getStyleClass().add("action-button");
-        btnEditEmployee.getStyleClass().add("action-button");
-        btnDeleteEmployee.getStyleClass().add("action-button");
-
         HBox employeeActions = new HBox(10, btnAddEmployee, btnEditEmployee, btnDeleteEmployee);
+
+        btnAddEmployee.setOnAction(e -> gestionEmployee.ajouterEmployee());
+
+        btnEditEmployee.setOnAction(e -> {
+            Employee selection = tableEmployee.getSelectionModel().getSelectedItem();
+            gestionEmployee.modifierEmployee(selection);
+        });
+
+        btnDeleteEmployee.setOnAction(e -> {
+            Employee selection = tableEmployee.getSelectionModel().getSelectedItem();
+            gestionEmployee.supprimerEmployee(selection);
+        });
 
         VBox pageEmployee = new VBox(10,
                 new Label("Employees"),
