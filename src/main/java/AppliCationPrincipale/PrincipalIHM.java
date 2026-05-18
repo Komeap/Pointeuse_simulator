@@ -7,10 +7,12 @@ import Employee.Employee;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.time.LocalDate;
@@ -24,23 +26,27 @@ public class PrincipalIHM extends Application {
 
         BorderPane root = new BorderPane();
 
-        /* ================= NAVBAR ================= */
+        /* NAVBAR */
 
-        Button btnEmployee = new Button("Employés");
-        Button btnPointage = new Button("Pointages");
-        Button btnParameter = new Button("Paramètres");
+        Button btnEmployee = new Button("Employee");
+        Button btnPointage = new Button("Check");
+        Button btnParameter = new Button("Parameter");
 
-        HBox navbar = new HBox(btnEmployee, btnPointage, btnParameter);
+        btnEmployee.getStyleClass().add("nav-button");
+        btnPointage.getStyleClass().add("nav-button");
+        btnParameter.getStyleClass().add("nav-button");
+
+        HBox navbar = new HBox(15, btnEmployee, btnPointage, btnParameter);
         navbar.getStyleClass().add("navbar");
 
-        /* ================= TABLE EMPLOYEES ================= */
+        /* TABLE EMPLOYEES */
 
         TableView<Employee> tableEmployee = new TableView<>();
 
         TableColumn<Employee, String> colEmpId = new TableColumn<>("UUID");
         TableColumn<Employee, String> colFirstName = new TableColumn<>("Prénom");
         TableColumn<Employee, String> colLastName = new TableColumn<>("Nom");
-        TableColumn<Employee, String> colDepartment = new TableColumn<>("Département");
+        TableColumn<Employee, String> colDepartment = new TableColumn<>("Department");
 
         colEmpId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         colFirstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
@@ -60,15 +66,29 @@ public class PrincipalIHM extends Application {
         tableEmployee.setPrefHeight(500);
         tableEmployee.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        VBox pageEmployee = new VBox(10, new Label("Employés"), tableEmployee);
+        Button btnAddEmployee = new Button("Add Employee");
+        Button btnEditEmployee = new Button("Modify Employee");
+        Button btnDeleteEmployee = new Button("Delete Employee");
 
-        /* ================= TABLE POINTAGE ================= */
+        btnAddEmployee.getStyleClass().add("action-button");
+        btnEditEmployee.getStyleClass().add("action-button");
+        btnDeleteEmployee.getStyleClass().add("action-button");
+
+        HBox employeeActions = new HBox(10, btnAddEmployee, btnEditEmployee, btnDeleteEmployee);
+
+        VBox pageEmployee = new VBox(10,
+                new Label("Employees"),
+                employeeActions,
+                tableEmployee
+        );
+
+        /* TABLE POINTAGE */
 
         TableView<Check> tablePointage = new TableView<>();
 
-        TableColumn<Check, UUID> colEmpUUID = new TableColumn<>("Employé");
+        TableColumn<Check, UUID> colEmpUUID = new TableColumn<>("Employees");
         TableColumn<Check, LocalDate> colDate = new TableColumn<>("Date");
-        TableColumn<Check, LocalTime> colTime = new TableColumn<>("Heure");
+        TableColumn<Check, LocalTime> colTime = new TableColumn<>("Time");
         TableColumn<Check, CheckType> colType = new TableColumn<>("Type");
 
         colEmpUUID.setCellValueFactory(new PropertyValueFactory<>("employeeUUID"));
@@ -90,26 +110,41 @@ public class PrincipalIHM extends Application {
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        VBox pagePointage = new VBox(10, new Label("Pointages"), tablePointage);
+        VBox pagePointage = new VBox(10, new Label("Check"), tablePointage);
 
-        VBox pageParameter = new VBox(new Label("Paramètres"));
+        VBox pageParameter = new VBox(new Label("Parameter"));
 
-        /* ================= NAV ACTIONS ================= */
+        /*  NAV ACTIONS  */
 
         btnEmployee.setOnAction(e -> root.setCenter(pageEmployee));
         btnPointage.setOnAction(e -> root.setCenter(pagePointage));
         btnParameter.setOnAction(e -> root.setCenter(pageParameter));
 
-        /* ================= ROOT ================= */
+        /*  ROOT  */
 
         root.setTop(navbar);
         root.setCenter(pageEmployee);
 
-        Scene scene = new Scene(root, 1000, 600);
-        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        /*  FENETRE FULL SCREEN  */
+
+        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+
+        Scene scene = new Scene(
+                root,
+                screenBounds.getWidth(),
+                screenBounds.getHeight()
+        );
+
+        scene.getStylesheets().add(
+                getClass().getResource("/style.css").toExternalForm()
+        );
 
         stage.setTitle("Application");
         stage.setScene(scene);
+        stage.setX(screenBounds.getMinX());
+        stage.setY(screenBounds.getMinY());
+        stage.setWidth(screenBounds.getWidth());
+        stage.setHeight(screenBounds.getHeight());
         stage.show();
     }
 
