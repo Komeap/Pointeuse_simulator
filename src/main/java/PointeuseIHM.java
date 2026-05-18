@@ -1,4 +1,5 @@
 import Check.CheckType;
+import Employee.Employee;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -63,9 +64,12 @@ public class PointeuseIHM extends Application {
         labelRoundHeure.setFont(Font.font("Arial", 12));
 
         // Liste déroulante des employés
-        ComboBox<String> choixEmployer = new ComboBox<>(FXCollections.observableArrayList(
-                "Pierre Cointre", "Tiago Espitalier", "Julien Toulzac"
-        ));
+        Employee e1 = new Employee("Pierre", "Cointre", null, null);
+        Employee e2 = new Employee("Tiago", "Espitalier", null, null);
+
+
+        ComboBox<Employee> choixEmployer = new ComboBox<>(FXCollections.observableArrayList(e1, e2));
+        choixEmployer.getSelectionModel().selectFirst();
         choixEmployer.getSelectionModel().selectFirst(); // Sélectionne le premier par défaut
 
         Button check = new Button("Check in/out");
@@ -88,19 +92,28 @@ public class PointeuseIHM extends Application {
         root.setBottom(panneauControles);
 
         // Événement sur le bouton
-        check.setOnAction(e -> {
-            UUID testid = UUID.randomUUID();
-            CheckType testcheck = CheckType.OUT;
-            Message msg = new Message(testid, testcheck, LocalDateTime.now());
+        check.setOnAction(e -> { // <--- UTILISE LE BOUTON 'check'
+            Employee selected = choixEmployer.getValue();
+            if (selected != null) {
+                UUID idUnique = selected.getEmployeeId();
 
-            bufferPointages.add(msg);
-            System.out.println("Pointage mis en attente. Total dans le buffer : " + bufferPointages.size());
+                LocalDateTime now = LocalDateTime.now();
+                int modulo = now.getMinute() % 15;
+                int minutesToAdd = (modulo < 8) ? -modulo : (15 - modulo);
+                LocalDateTime roundedTime = now.plusMinutes(minutesToAdd).truncatedTo(ChronoUnit.MINUTES);
+
+                Message msg = new Message(idUnique, CheckType.OUT, roundedTime);
+                bufferPointages.add(msg);
+                System.out.println("Pointage enregistré pour " + selected.getFirstName());
+            }
         });
 
         // Événement sur la liste déroulante
         choixEmployer.setOnAction(e -> {
-            String employe = choixEmployer.getValue();
-            System.out.println("Vous avez sélectionné : " + employe);
+            Employee employe = choixEmployer.getValue(); // <--- UTILISE LE TYPE Employee
+            if (employe != null) {
+                System.out.println("Vous avez sélectionné : " + employe.getFirstName() + " " + employe.getLastName());
+            }
         });
 
         // JavaFX Timeline (remplace le javax.swing.Timer) exécuté chaque seconde
