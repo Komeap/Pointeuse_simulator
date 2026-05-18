@@ -7,6 +7,7 @@ import Employee.Employee;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -82,6 +83,8 @@ public class PrincipalIHM extends Application {
                 tableEmployee
         );
 
+        pageEmployee.setPadding(new Insets(15));
+
         /* TABLE POINTAGE */
 
         TableView<Check> tablePointage = new TableView<>();
@@ -110,22 +113,92 @@ public class PrincipalIHM extends Application {
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        VBox pagePointage = new VBox(10, new Label("Check"), tablePointage);
+        VBox pagePointage = new VBox(10,
+                new Label("Check"),
+                tablePointage
+        );
 
-        VBox pageParameter = new VBox(new Label("Parameter"));
+        pagePointage.setPadding(new Insets(15));
 
-        /*  NAV ACTIONS  */
+        /* PAGE PARAMETRES */
+
+        Label lblTitleParam = new Label("Application Parameters");
+
+
+        // Port
+        Label lblPort = new Label("Port :");
+        TextField txtPort = new TextField();
+        txtPort.setPromptText("5001");
+
+        // Nom application
+        Label lblAppName = new Label("Application Name :");
+        TextField txtAppName = new TextField();
+        txtAppName.setPromptText("PointageApp");
+
+        // Temps de rafraîchissement
+        Label lblRefresh = new Label("Refresh Delay (sec) :");
+        Spinner<Integer> refreshSpinner = new Spinner<>(1, 60, 5);
+
+        // Activation notifications
+        CheckBox cbNotifications = new CheckBox("Enable notifications");
+
+        // Bouton sauvegarde
+        Button btnSaveParams = new Button("Save Parameters");
+        btnSaveParams.getStyleClass().add("action-button");
+
+        btnSaveParams.setOnAction(e -> {
+            String port = txtPort.getText();
+            String appName = txtAppName.getText();
+            int refresh = refreshSpinner.getValue();
+            boolean notifications = cbNotifications.isSelected();
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Parameters Saved");
+            alert.setHeaderText(null);
+            alert.setContentText(
+                            "Port : " + port +
+                            "\nApplication : " + appName +
+                            "\nRefresh : " + refresh + " sec" +
+                            "\nNotifications : " + notifications
+            );
+            alert.showAndWait();
+        });
+
+        GridPane paramGrid = new GridPane();
+        paramGrid.setHgap(10);
+        paramGrid.setVgap(15);
+
+        paramGrid.add(lblPort, 0, 1);
+        paramGrid.add(txtPort, 1, 1);
+
+        paramGrid.add(lblAppName, 0, 2);
+        paramGrid.add(txtAppName, 1, 2);
+
+        paramGrid.add(lblRefresh, 0, 3);
+        paramGrid.add(refreshSpinner, 1, 3);
+
+        paramGrid.add(cbNotifications, 1, 4);
+
+        VBox pageParameter = new VBox(20,
+                lblTitleParam,
+                paramGrid,
+                btnSaveParams
+        );
+
+        pageParameter.setPadding(new Insets(20));
+
+        /* NAV ACTIONS */
 
         btnEmployee.setOnAction(e -> root.setCenter(pageEmployee));
         btnPointage.setOnAction(e -> root.setCenter(pagePointage));
         btnParameter.setOnAction(e -> root.setCenter(pageParameter));
 
-        /*  ROOT  */
+        /* ROOT */
 
         root.setTop(navbar);
         root.setCenter(pageEmployee);
 
-        /*  FENETRE FULL SCREEN  */
+        /* FENETRE FULL SCREEN */
 
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
