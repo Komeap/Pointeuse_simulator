@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,16 +8,27 @@ import java.util.List;
 
 public class Serveur {
     private static List<Message> historiqueGlobal = new ArrayList<>();
+    private static int port = 5001;
 
+    public static int getPort(){
+        return port;
+    }
+    public static void setPort(int val){
+        port = val;
+    }
+    public static void changerPort(int newPort) throws IOException {
+        setPort(newPort);
+        ServerSocket serverSocket = new ServerSocket(getPort());
+        System.out.println("Serveur en attente sur le port " + getPort());
+    }
     public static void main(String[] args) throws Exception {
 
         List<Message> charge = (List<Message>) Serialisation.loadObject("base_centrale.ser");
         if (charge != null)
             historiqueGlobal.addAll(charge);
-        int port = 5001; // port random pour l'instant
 
-        ServerSocket serverSocket = new ServerSocket(port);
-        System.out.println("Serveur en attente sur le port " + port);
+        ServerSocket serverSocket = null;
+        Serveur.changerPort(getPort());
 
         while(true) {
             // Ca wait jusqu'a ce qu'il y ait une connexion
