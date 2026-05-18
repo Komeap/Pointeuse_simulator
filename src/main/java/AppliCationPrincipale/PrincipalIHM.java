@@ -28,6 +28,12 @@ public class PrincipalIHM extends Application {
 
         BorderPane root = new BorderPane();
 
+        /* BACKEND */
+        GestionPointage gestionPointage = new GestionPointage();
+
+        Serveur monServeur = new Serveur(gestionPointage);
+        monServeur.demarrer();
+
         /* NAVBAR */
 
         Button btnEmployee = new Button("Employee");
@@ -110,7 +116,9 @@ public class PrincipalIHM extends Application {
                         new Check(LocalDate.now(), LocalTime.of(17, 30), CheckType.OUT, UUID.randomUUID())
                 );
 
-        tablePointage.setItems(checkList);
+        //connecte TableView sur la liste des pointages
+        //serveur reçoit pointage = l'affiche ici
+        tablePointage.setItems(gestionPointage.getListePointagesFX());
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
