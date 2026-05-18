@@ -1,3 +1,5 @@
+package Serveur;
+
 import java.io.*;
 
 public class Serialisation implements Serializable {

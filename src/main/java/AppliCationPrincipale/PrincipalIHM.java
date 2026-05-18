@@ -3,6 +3,7 @@ package AppliCationPrincipale;
 import Check.Check;
 import Check.CheckType;
 import Employee.Employee;
+import Serveur.Serveur;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -147,22 +148,40 @@ public class PrincipalIHM extends Application {
         btnSaveParams.getStyleClass().add("action-button");
 
         btnSaveParams.setOnAction(e -> {
-            String port = txtPort.getText();
+
             String appName = txtAppName.getText();
             int refresh = refreshSpinner.getValue();
             boolean notifications = cbNotifications.isSelected();
 
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Parameters Saved");
-            alert.setHeaderText(null);
-            alert.setContentText(
-                            "Port : " + port +
-                            "\nApplication : " + appName +
-                            "\nRefresh : " + refresh + " sec" +
-                            "\nNotifications : " + notifications
-            );
-            alert.showAndWait();
+            try {
+
+                int portValue = Integer.parseInt(txtPort.getText());
+
+                Serveur.changerPort(portValue);
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Parameters Saved");
+                alert.setHeaderText(null);
+                alert.setContentText(
+                        "Port serveur : " + portValue +
+                                "\nApplication : " + appName +
+                                "\nRefresh : " + refresh + " sec" +
+                                "\nNotifications : " + notifications
+                );
+
+                alert.showAndWait();
+
+            } catch (Exception ex) {
+
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Erreur");
+                alert.setHeaderText(null);
+                alert.setContentText("Port invalide");
+
+                alert.showAndWait();
+            }
         });
+
 
         GridPane paramGrid = new GridPane();
         paramGrid.setHgap(10);

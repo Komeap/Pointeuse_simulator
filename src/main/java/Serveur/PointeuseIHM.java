@@ -1,3 +1,5 @@
+package Serveur;
+
 import Check.CheckType;
 import Employee.Employee;
 import javafx.animation.Animation;

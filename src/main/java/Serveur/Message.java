@@ -1,3 +1,5 @@
+package Serveur;
+
 import Check.CheckType;
 
 import java.io.Serializable;
