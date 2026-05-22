@@ -21,13 +21,6 @@ public class GestionEmployee {
         List<Employee> loadFile = (List<Employee>) Serialisation.loadObject(fileName);
         if (loadFile != null && !loadFile.isEmpty()) {
             this.employeeList.addAll(loadFile);
-        }else{
-            this.employeeList.addAll(
-                new Employee("Jean", "Dupont", null, null),
-                new Employee("Marie", "Leroy", null, null),
-                new Employee("Lucas", "Martin", null, null)
-            );
-            sauvegarderDonnees();
         }
     }
 

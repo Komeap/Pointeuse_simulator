@@ -73,20 +73,31 @@ public class PointeuseIHM extends Application {
             @SuppressWarnings("unchecked")
             List<Employee> listeChargee = (List<Employee>) Serialisation.loadObject("employees.ser");
             if (listeChargee != null && !listeChargee.isEmpty()) {
+                // Sauvegarder l'employé actuellement sélectionné pour ne pas perdre sa sélection au rafraîchissement
+                Employee currentSelection = choiceEmployer.getValue();
+
                 choiceEmployer.setItems(FXCollections.observableArrayList(listeChargee));
-                choiceEmployer.getSelectionModel().selectFirst();
-            } else {
-                System.out.println("Aucun employé trouvé dans le fichier partagé.");
+
+                // Si l'employé sélectionné est toujours dans la liste, on le remet, sinon on prend le premier
+                if (currentSelection != null && listeChargee.contains(currentSelection)) {
+                    choiceEmployer.setValue(currentSelection);
+                } else {
+                    choiceEmployer.getSelectionModel().selectFirst();
+                }
             }
         };
 
         // Premier chargement au lancement
         refreshEmployees.run();
 
-        Button check = new Button("Check in/out");
-        Button btnRefresh = new Button("-><-");
+        Timeline autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(5), event -> {
+            refreshEmployees.run();
+        }));
+        autoRefreshTimeline.setCycleCount(Animation.INDEFINITE);
+        autoRefreshTimeline.play(); // Démarre le scan automatique
 
-        btnRefresh.setOnAction(e -> refreshEmployees.run());
+        Button check = new Button("Check in/out");
+
 
         // Panneau central (Temps) avec un VBox
         VBox panneauTemps = new VBox(10); // Espacement de 10px entre les éléments
@@ -98,7 +109,7 @@ public class PointeuseIHM extends Application {
         HBox panneauControles = new HBox(15); // Espacement de 15px entre les éléments
         panneauControles.setAlignment(Pos.CENTER);
         panneauControles.setPadding(new Insets(0, 0, 20, 0));
-        panneauControles.getChildren().addAll(choiceEmployer, check, btnRefresh);
+        panneauControles.getChildren().addAll(choiceEmployer, check);
 
         // Disposition principale
         BorderPane root = new BorderPane();
