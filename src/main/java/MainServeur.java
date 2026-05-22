@@ -1,4 +1,4 @@
-import Serveur.Serveur;
+import Serveur.Server;
 import AppliCationPrincipale.GestionPointage;
 
 public class MainServeur {
@@ -7,7 +7,7 @@ public class MainServeur {
         GestionPointage gestionPointage = new GestionPointage();
 
         // 2. On instancie le serveur en lui transmettant le gestionnaire
-        Serveur monServeur = new Serveur(gestionPointage);
+        Server monServeur = new Server(gestionPointage);
 
         // 3. On lance le serveur (il s'exécute alors en tâche de fond)
         monServeur.demarrer();

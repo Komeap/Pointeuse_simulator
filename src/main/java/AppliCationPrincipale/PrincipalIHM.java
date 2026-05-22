@@ -3,7 +3,7 @@ package AppliCationPrincipale;
 import Check.Check;
 import Check.CheckType;
 import Employee.Employee;
-import Serveur.Serveur;
+import Serveur.Server;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -32,7 +32,7 @@ public class PrincipalIHM extends Application {
         GestionPointage gestionPointage = new GestionPointage();
         GestionEmployee gestionEmployee = new GestionEmployee();
 
-        Serveur monServeur = new Serveur(gestionPointage);
+        Server monServeur = new Server(gestionPointage);
         monServeur.demarrer();
 
         /* NAVBAR */
@@ -167,7 +167,7 @@ public class PrincipalIHM extends Application {
 
                 int portValue = Integer.parseInt(txtPort.getText());
 
-                Serveur.changerPort(portValue);
+                Server.changerPort(portValue);
 
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Parameters Saved");

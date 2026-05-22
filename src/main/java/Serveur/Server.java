@@ -1,22 +1,20 @@
 package Serveur;
 
 import Check.Check; // <-- INDISPENSABLE pour corriger l'erreur "cannot find symbol class Check"
-import Serveur.Message;
 import AppliCationPrincipale.GestionPointage;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
 
-public class Serveur {
+public class Server {
 
     private final GestionPointage gestionPointage;
     private static int port = 5001;
     private static ServerSocket serverSocket;
 
-    public Serveur(GestionPointage gestionPointage)
+    public Server(GestionPointage gestionPointage)
     {
         this.gestionPointage = gestionPointage;
     }
@@ -41,7 +39,7 @@ public class Serveur {
         // Recréation du serveur
         serverSocket = new ServerSocket(getPort());
 
-        System.out.println("Serveur lancé sur le port " + getPort());
+        System.out.println("Server lancé sur le port " + getPort());
     }
 
     public void demarrer() {

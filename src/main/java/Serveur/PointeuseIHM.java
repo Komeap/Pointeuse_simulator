@@ -180,7 +180,7 @@ public class PointeuseIHM extends Application {
                             System.out.println("Message envoyé au serveur !");
 
                         } catch (Exception ex) {
-                            System.out.println("Serveur injoignable. Fin de la tentative, on réessayera au prochain cycle.");
+                            System.out.println("Server injoignable. Fin de la tentative, on réessayera au prochain cycle.");
                             break; // On sort de la boucle interne pour patienter à nouveau 5 secondes
                         }
                     }
