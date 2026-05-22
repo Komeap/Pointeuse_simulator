@@ -4,8 +4,9 @@ import Entreprise.Department;
 import Planning.Planning;
 
 import java.util.UUID;
+import java.io.Serializable;
 
-public class Employee {
+public class Employee implements Serializable{
 
 	private final UUID employeeId;
 

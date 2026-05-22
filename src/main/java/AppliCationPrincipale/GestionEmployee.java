@@ -1,21 +1,34 @@
 package AppliCationPrincipale;
+
 import Employee.Employee;
+import Serveur.Serialisation;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextInputDialog;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class GestionEmployee {
     private ObservableList<Employee> employeeList;
+    private static final String fileName = "employees.ser"; //nom du fichier contenant les employés
 
     //Ici on init les employees par défaut ais faudra le modif merci
     public GestionEmployee() {
-        this.employeeList = FXCollections.observableArrayList(
+        this.employeeList = FXCollections.observableArrayList();
+
+        List<Employee> loadFile = (List<Employee>) Serialisation.loadObject(fileName);
+        if (loadFile != null && !loadFile.isEmpty()) {
+            this.employeeList.addAll(loadFile);
+        }else{
+            this.employeeList.addAll(
                 new Employee("Jean", "Dupont", null, null),
                 new Employee("Marie", "Leroy", null, null),
                 new Employee("Lucas", "Martin", null, null)
-        );
+            );
+            sauvegarderDonnees();
+        }
     }
 
     public ObservableList<Employee> getEmployeeList()
@@ -35,10 +48,14 @@ public class GestionEmployee {
             String[] parts = name.split(" ");
             if (parts.length >= 2) {
                 employeeList.add(new Employee(parts[0], parts[1], null, null));
-            } else if (parts.length == 1 && !parts[0].isEmpty()) {
-                employeeList.add(new Employee(parts[0], "", null, null));
+                sauvegarderDonnees();
             }
         });
+    }
+
+    private void sauvegarderDonnees() {
+        // On convertit l'ObservableList en ArrayList classique pour la sérialisation
+        Serialisation.saveObject(new ArrayList<>(employeeList), fileName);
     }
 
     public void modifierEmployee(Employee selectedEmployee) {
@@ -49,7 +66,7 @@ public class GestionEmployee {
 
         TextInputDialog dialog = new TextInputDialog(selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName());
         dialog.setTitle("Modifier un employé");
-        dialog.setHeaderText("Modification de : " + selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName());
+        //dialog.setHeaderText("Modification de : " + selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName());
         dialog.setContentText("Modifier le prénom et le nom :");
 
         Optional<String> result = dialog.showAndWait();
@@ -58,9 +75,10 @@ public class GestionEmployee {
             if (parts.length >= 2) {
                 selectedEmployee.setFirstName(parts[0]);
                 selectedEmployee.setLastName(parts[1]);
-                // Astuce JavaFX : force le rafraîchissement visuel de la table
+                //Astuce JavaFX : force le rafraîchissement visuel de la table
                 int index = employeeList.indexOf(selectedEmployee);
                 employeeList.set(index, selectedEmployee);
+                sauvegarderDonnees();
             }
         });
     }
@@ -71,6 +89,7 @@ public class GestionEmployee {
             return;
         }
         employeeList.remove(selectedEmployee);
+        sauvegarderDonnees();
     }
 
     private void afficherAlerteSelection() {
