@@ -65,16 +65,28 @@ public class PointeuseIHM extends Application {
         Label labelRoundHeure = new Label("");
         labelRoundHeure.setFont(Font.font("Arial", 12));
 
-        // Liste déroulante des employés
-        Employee e1 = new Employee("Pierre", "Cointre", null, null);
-        Employee e2 = new Employee("Tiago", "Espitalier", null, null);
+        //Liste des emplyés dynamique
 
+        ComboBox<Employee> choiceEmployer = new ComboBox<>();
 
-        ComboBox<Employee> choixEmployer = new ComboBox<>(FXCollections.observableArrayList(e1, e2));
-        choixEmployer.getSelectionModel().selectFirst();
-        choixEmployer.getSelectionModel().selectFirst(); // Sélectionne le premier par défaut
+        Runnable refreshEmployees = () ->{
+            @SuppressWarnings("unchecked")
+            List<Employee> listeChargee = (List<Employee>) Serialisation.loadObject("employees.ser");
+            if (listeChargee != null && !listeChargee.isEmpty()) {
+                choiceEmployer.setItems(FXCollections.observableArrayList(listeChargee));
+                choiceEmployer.getSelectionModel().selectFirst();
+            } else {
+                System.out.println("Aucun employé trouvé dans le fichier partagé.");
+            }
+        };
+
+        // Premier chargement au lancement
+        refreshEmployees.run();
 
         Button check = new Button("Check in/out");
+        Button btnRefresh = new Button("-><-");
+
+        btnRefresh.setOnAction(e -> refreshEmployees.run());
 
         // Panneau central (Temps) avec un VBox
         VBox panneauTemps = new VBox(10); // Espacement de 10px entre les éléments
@@ -86,7 +98,7 @@ public class PointeuseIHM extends Application {
         HBox panneauControles = new HBox(15); // Espacement de 15px entre les éléments
         panneauControles.setAlignment(Pos.CENTER);
         panneauControles.setPadding(new Insets(0, 0, 20, 0));
-        panneauControles.getChildren().addAll(choixEmployer, check);
+        panneauControles.getChildren().addAll(choiceEmployer, check, btnRefresh);
 
         // Disposition principale
         BorderPane root = new BorderPane();
@@ -95,7 +107,7 @@ public class PointeuseIHM extends Application {
 
         // Événement sur le bouton
         check.setOnAction(e -> { // <--- UTILISE LE BOUTON 'check'
-            Employee selected = choixEmployer.getValue();
+            Employee selected = choiceEmployer.getValue();
             if (selected != null) {
                 UUID idUnique = selected.getEmployeeId();
 
@@ -111,8 +123,8 @@ public class PointeuseIHM extends Application {
         });
 
         // Événement sur la liste déroulante
-        choixEmployer.setOnAction(e -> {
-            Employee employe = choixEmployer.getValue(); // <--- UTILISE LE TYPE Employee
+        choiceEmployer.setOnAction(e -> {
+            Employee employe = choiceEmployer.getValue(); // <--- UTILISE LE TYPE Employee
             if (employe != null) {
                 System.out.println("Vous avez sélectionné : " + employe.getFirstName() + " " + employe.getLastName());
             }
