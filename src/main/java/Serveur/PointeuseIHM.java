@@ -21,6 +21,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ButtonType;
+import javafx.scene.layout.GridPane;
 
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -32,6 +36,29 @@ import java.util.*;
 public class PointeuseIHM extends Application {
 
     private static List<Message> bufferPointages = Collections.synchronizedList(new ArrayList<>());
+    private static String serverIp = "localhost";
+    private static int serverPort = 5001;
+    private static int refreshSeconds = 5;
+
+    public static synchronized void setServerIp(String ip) {
+        serverIp = ip;
+    }
+
+    public static synchronized void setServerPort(int port) {
+        if (port > 0 && port <= 65535) {
+            serverPort = port;
+        }
+    }
+
+    public static synchronized void setRefreshSeconds(int seconds) {
+        if (seconds > 0) {
+            refreshSeconds = seconds;
+        }
+    }
+
+    public static synchronized int getRefreshSeconds() {
+        return refreshSeconds;
+    }
 
     // Bloc statique pour charger la sauvegarde au lancement de la classe
     static {
@@ -85,28 +112,83 @@ public class PointeuseIHM extends Application {
 
         Button check = new Button("Check in/out");
         Button btnRefresh = new Button("-><-");
+        Button btnSettings = new Button("⚙");
+
+        btnSettings.setOnAction(e -> {
+
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Configuration Serveur");
+
+            // Champs
+            TextField ipField = new TextField(serverIp);
+            TextField portField = new TextField(String.valueOf(serverPort));
+
+            // Layout
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new Insets(20));
+
+            grid.add(new Label("IP :"), 0, 0);
+            grid.add(ipField, 1, 0);
+
+            grid.add(new Label("Port :"), 0, 1);
+            grid.add(portField, 1, 1);
+
+            dialog.getDialogPane().setContent(grid);
+
+            ButtonType saveButton = new ButtonType("Sauvegarder");
+            dialog.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CANCEL);
+
+            Optional<ButtonType> result = dialog.showAndWait();
+
+            if (result.isPresent() && result.get() == saveButton) {
+                try {
+                    setServerIp(ipField.getText());
+                    setServerPort(Integer.parseInt(portField.getText()));
+
+                    System.out.println("Nouvelle configuration : " + serverIp + ":" + serverPort);
+
+                } catch (NumberFormatException ex) {
+                    System.out.println("Port invalide.");
+                }
+            }
+        });
 
         btnRefresh.setOnAction(e -> refreshEmployees.run());
 
         // Panneau central (Temps) avec un VBox
-        VBox panneauTemps = new VBox(10); // Espacement de 10px entre les éléments
+        VBox panneauTemps = new VBox(10);
         panneauTemps.setAlignment(Pos.CENTER);
         panneauTemps.setPadding(new Insets(20, 0, 0, 0));
+
+        // AJOUT DES LABELS
+        Label labelEmpty = new Label();
         panneauTemps.getChildren().addAll(labelDate, labelHeure, labelRoundHeure);
 
-        // Panneau du bas (Contrôles) avec un HBox
-        HBox panneauControles = new HBox(15); // Espacement de 15px entre les éléments
+        // Barre du haut avec le bouton paramètres
+        HBox topBar = new HBox();
+        topBar.setAlignment(Pos.TOP_RIGHT);
+        topBar.setPadding(new Insets(10));
+        topBar.getChildren().add(btnSettings);
+
+        // Conteneur principal haut + centre
+        VBox topContainer = new VBox();
+        topContainer.getChildren().addAll(topBar, panneauTemps);
+
+        // Panneau du bas (Contrôles)
+        HBox panneauControles = new HBox(15);
         panneauControles.setAlignment(Pos.CENTER);
         panneauControles.setPadding(new Insets(0, 0, 20, 0));
         panneauControles.getChildren().addAll(choiceEmployer, check, btnRefresh);
 
         // Disposition principale
         BorderPane root = new BorderPane();
-        root.setCenter(panneauTemps);
-        root.setBottom(panneauControles);
+        root.setCenter(topContainer);
+        root.setBottom(panneauControles);;
 
         // Événement sur le bouton
-        check.setOnAction(e -> { // <--- UTILISE LE BOUTON 'check'
+        check.setOnAction(e -> {
             Employee selected = choiceEmployer.getValue();
             if (selected != null) {
                 UUID idUnique = selected.getEmployeeId();
@@ -124,7 +206,7 @@ public class PointeuseIHM extends Application {
 
         // Événement sur la liste déroulante
         choiceEmployer.setOnAction(e -> {
-            Employee employe = choiceEmployer.getValue(); // <--- UTILISE LE TYPE Employee
+            Employee employe = choiceEmployer.getValue();
             if (employe != null) {
                 System.out.println("Vous avez sélectionné : " + employe.getFirstName() + " " + employe.getLastName());
             }
@@ -170,10 +252,10 @@ public class PointeuseIHM extends Application {
         Thread threadEnvoi = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(5001); // 5 secondes
+                    Thread.sleep(getRefreshSeconds() * 1000L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                    break; // Sécurité pour quitter le thread si interrompu
+                    break;
                 }
 
                 if (!bufferPointages.isEmpty()) {
@@ -181,26 +263,24 @@ public class PointeuseIHM extends Application {
 
                     while (!bufferPointages.isEmpty()) {
                         Message messageAEnvoyer = bufferPointages.get(0);
-                        try (Socket socket = new Socket("localhost", 5001);
+                        try (Socket socket = new Socket(serverIp, serverPort);
                              ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream())) {
 
                             oos.writeObject(messageAEnvoyer);
                             oos.flush();
 
-                            // Succès : on retire le message
                             bufferPointages.remove(0);
                             System.out.println("Message envoyé au serveur !");
 
                         } catch (Exception ex) {
                             System.out.println("Server injoignable. Fin de la tentative, on réessayera au prochain cycle.");
-                            break; // On sort de la boucle interne pour patienter à nouveau 5 secondes
+                            break;
                         }
                     }
                 }
             }
         });
 
-        // Permet au Thread de s'arrêter automatiquement si l'application JavaFX se ferme
         threadEnvoi.setDaemon(true);
         threadEnvoi.start();
     }
