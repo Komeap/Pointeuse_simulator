@@ -66,11 +66,10 @@ public class Server {
                         Message msg = (Message) ois.readObject();
 
                         // Conversion de Message en objet métier Check pour la table de l'IHM principale
-                        Check nouveauCheck = new Check(
+                        Check nouveauCheck = gestionPointage.creerPointageAutomatique(
+                                msg.getIdEmp(),
                                 msg.getDate().toLocalDate(),
-                                msg.getDate().toLocalTime(),
-                                msg.getType(),
-                                msg.getIdEmp()
+                                msg.getDate().toLocalTime()
                         );
 
                         // F1 : Enregistrement et mise à jour automatique de l'IHM
