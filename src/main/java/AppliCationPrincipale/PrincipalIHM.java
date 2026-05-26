@@ -110,22 +110,29 @@ public class PrincipalIHM extends Application {
 
         tablePointage.getColumns().addAll(colEmpUUID, colDate, colTime, colType);
 
-        ObservableList<Check> checkList =
-                FXCollections.observableArrayList(
-                        new Check(LocalDate.now(), LocalTime.of(8, 0), CheckType.IN, UUID.randomUUID()),
-                        new Check(LocalDate.now(), LocalTime.of(12, 0), CheckType.OUT, UUID.randomUUID()),
-                        new Check(LocalDate.now(), LocalTime.of(13, 0), CheckType.IN, UUID.randomUUID()),
-                        new Check(LocalDate.now(), LocalTime.of(17, 30), CheckType.OUT, UUID.randomUUID())
-                );
-
         //connecte TableView sur la liste des pointages
         //serveur reçoit pointage = l'affiche ici
         tablePointage.setItems(gestionPointage.getListePointagesFX());
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        Button btnEditCheck = new Button("Modify Check");
+        Button btnDeleteCheck = new Button("Delete Check");
+
+        HBox checkActions = new HBox(10, btnEditCheck, btnDeleteCheck);
+
+        btnEditCheck.setOnAction(e -> {
+            Check selection = tablePointage.getSelectionModel().getSelectedItem();
+            gestionPointage.modifierPointage(selection);
+        });
+
+        btnDeleteCheck.setOnAction(e -> {
+            Check selection = tablePointage.getSelectionModel().getSelectedItem();
+            gestionPointage.supprimerPointage(selection);
+        });
         VBox pagePointage = new VBox(10,
                 new Label("Check"),
+                checkActions,
                 tablePointage
         );
 
