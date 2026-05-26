@@ -1,4 +1,5 @@
 package AppliCationPrincipale;
 
-public class GestionPointage {
+public class
+GestionPointage {
 }
