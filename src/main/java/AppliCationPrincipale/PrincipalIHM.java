@@ -36,10 +36,6 @@ public class PrincipalIHM extends Application {
         /* BACKEND */
         GestionPointage gestionPointage = new GestionPointage();
         GestionEmployee gestionEmployee = new GestionEmployee();
-
-        Server monServeur = new Server(gestionPointage);
-        monServeur.demarrer();
-
         /* NAVBAR */
 
         Button btnEmployee = new Button("Employee");
