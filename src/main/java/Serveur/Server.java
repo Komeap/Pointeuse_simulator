@@ -23,16 +23,6 @@ public class Server {
 
         Thread serveurThread = new Thread(() -> {
 
-            // Chargement historique
-            @SuppressWarnings("unchecked")
-            List<Check> charge = (List<Check>) Serialisation.loadObject("base_centrale.ser");
-
-            if (charge != null) {
-                gestionPointage.restaurerHistorique(charge);
-                System.out.println("Historique restauré : "
-                        + gestionPointage.getHistoriqueGlobal().size()
-                        + " pointages.");
-            }
 
             try {
                 serverSocket = new ServerSocket(PORT);

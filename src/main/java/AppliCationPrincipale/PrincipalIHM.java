@@ -111,10 +111,9 @@ public class PrincipalIHM extends Application {
 
         tablePointage.getColumns().addAll(colEmpUUID, colDate, colTime, colType);
 
-<<<<<<< HEAD
         //connecte TableView sur la liste des pointages
         //serveur reçoit pointage = l'affiche ici
-=======
+
         ObservableList<Check> checkList =
                 FXCollections.observableArrayList(
                         new Check(LocalDate.now(), LocalTime.of(8, 0), CheckType.IN, UUID.randomUUID()),
@@ -123,7 +122,6 @@ public class PrincipalIHM extends Application {
                         new Check(LocalDate.now(), LocalTime.of(17, 30), CheckType.OUT, UUID.randomUUID())
                 );
 
->>>>>>> 87cb440240f2fa0628f485030f61026b72cb1921
         tablePointage.setItems(gestionPointage.getListePointagesFX());
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
