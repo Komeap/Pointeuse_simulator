@@ -3,6 +3,7 @@ package AppliCationPrincipale;
 import Check.Check;
 import Check.CheckType;
 import Employee.Employee;
+import Serveur.Server;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -26,6 +27,13 @@ public class PrincipalIHM extends Application {
     public void start(Stage stage) {
 
         BorderPane root = new BorderPane();
+
+        /* BACKEND */
+        GestionPointage gestionPointage = new GestionPointage();
+        GestionEmployee gestionEmployee = new GestionEmployee();
+
+        Server monServeur = new Server(gestionPointage);
+        monServeur.demarrer();
 
         /* NAVBAR */
 
@@ -56,14 +64,7 @@ public class PrincipalIHM extends Application {
 
         tableEmployee.getColumns().addAll(colEmpId, colFirstName, colLastName, colDepartment);
 
-        ObservableList<Employee> employeeList =
-                FXCollections.observableArrayList(
-                        new Employee("Jean", "Dupont", null, null),
-                        new Employee("Marie", "Leroy", null, null),
-                        new Employee("Lucas", "Martin", null, null)
-                );
-
-        tableEmployee.setItems(employeeList);
+        tableEmployee.setItems(gestionEmployee.getEmployeeList());
         tableEmployee.setPrefHeight(500);
         tableEmployee.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -71,11 +72,19 @@ public class PrincipalIHM extends Application {
         Button btnEditEmployee = new Button("Modify Employee");
         Button btnDeleteEmployee = new Button("Delete Employee");
 
-        btnAddEmployee.getStyleClass().add("action-button");
-        btnEditEmployee.getStyleClass().add("action-button");
-        btnDeleteEmployee.getStyleClass().add("action-button");
-
         HBox employeeActions = new HBox(10, btnAddEmployee, btnEditEmployee, btnDeleteEmployee);
+
+        btnAddEmployee.setOnAction(e -> gestionEmployee.ajouterEmployee());
+
+        btnEditEmployee.setOnAction(e -> {
+            Employee selection = tableEmployee.getSelectionModel().getSelectedItem();
+            gestionEmployee.modifierEmployee(selection);
+        });
+
+        btnDeleteEmployee.setOnAction(e -> {
+            Employee selection = tableEmployee.getSelectionModel().getSelectedItem();
+            gestionEmployee.supprimerEmployee(selection);
+        });
 
         VBox pageEmployee = new VBox(10,
                 new Label("Employees"),
@@ -109,7 +118,9 @@ public class PrincipalIHM extends Application {
                         new Check(LocalDate.now(), LocalTime.of(17, 30), CheckType.OUT, UUID.randomUUID())
                 );
 
-        tablePointage.setItems(checkList);
+        //connecte TableView sur la liste des pointages
+        //serveur reçoit pointage = l'affiche ici
+        tablePointage.setItems(gestionPointage.getListePointagesFX());
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -147,22 +158,40 @@ public class PrincipalIHM extends Application {
         btnSaveParams.getStyleClass().add("action-button");
 
         btnSaveParams.setOnAction(e -> {
-            String port = txtPort.getText();
+
             String appName = txtAppName.getText();
             int refresh = refreshSpinner.getValue();
             boolean notifications = cbNotifications.isSelected();
 
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Parameters Saved");
-            alert.setHeaderText(null);
-            alert.setContentText(
-                            "Port : " + port +
-                            "\nApplication : " + appName +
-                            "\nRefresh : " + refresh + " sec" +
-                            "\nNotifications : " + notifications
-            );
-            alert.showAndWait();
+            try {
+
+                int portValue = Integer.parseInt(txtPort.getText());
+
+                Server.changerPort(portValue);
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Parameters Saved");
+                alert.setHeaderText(null);
+                alert.setContentText(
+                        "Port serveur : " + portValue +
+                                "\nApplication : " + appName +
+                                "\nRefresh : " + refresh + " sec" +
+                                "\nNotifications : " + notifications
+                );
+
+                alert.showAndWait();
+
+            } catch (Exception ex) {
+
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Erreur");
+                alert.setHeaderText(null);
+                alert.setContentText("Port invalide");
+
+                alert.showAndWait();
+            }
         });
+
 
         GridPane paramGrid = new GridPane();
         paramGrid.setHgap(10);
