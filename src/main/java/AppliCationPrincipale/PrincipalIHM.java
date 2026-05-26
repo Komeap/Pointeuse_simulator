@@ -3,6 +3,7 @@ package AppliCationPrincipale;
 import Check.Check;
 import Check.CheckType;
 import Employee.Employee;
+import Entreprise.Department;
 import Serveur.Server;
 
 import javafx.application.Application;
@@ -19,6 +20,8 @@ import javafx.stage.Stage;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class PrincipalIHM extends Application {
@@ -30,7 +33,12 @@ public class PrincipalIHM extends Application {
 
         /* BACKEND */
         GestionPointage gestionPointage = new GestionPointage();
-        GestionEmployee gestionEmployee = new GestionEmployee();
+        List<Department> departmentsInitiaux = new ArrayList<>();
+        departmentsInitiaux.add(new Department("Ressources Humaines"));
+        departmentsInitiaux.add(new Department("Développement IT"));
+        departmentsInitiaux.add(new Department("Comptabilité"));
+
+        GestionEmployee gestionEmployee = new GestionEmployee(departmentsInitiaux);
 
         Server monServeur = new Server(gestionPointage);
         monServeur.demarrer();
@@ -98,25 +106,41 @@ public class PrincipalIHM extends Application {
 
         TableView<Check> tablePointage = new TableView<>();
 
-        TableColumn<Check, UUID> colEmpUUID = new TableColumn<>("Employees");
+        // 1. On crée 3 nouvelles colonnes à la place de la colonne UUID
+        TableColumn<Check, String> colCheckFirstName = new TableColumn<>("Prénom");
+        TableColumn<Check, String> colCheckLastName = new TableColumn<>("Nom");
+        TableColumn<Check, String> colCheckDept = new TableColumn<>("Département");
+
         TableColumn<Check, LocalDate> colDate = new TableColumn<>("Date");
         TableColumn<Check, LocalTime> colTime = new TableColumn<>("Time");
         TableColumn<Check, CheckType> colType = new TableColumn<>("Type");
 
-        colEmpUUID.setCellValueFactory(new PropertyValueFactory<>("employeeUUID"));
+        // 2. On configure la logique de recherche pour remplir ces 3 colonnes dynamiquement
+        colCheckFirstName.setCellValueFactory(cellData -> {
+            UUID empId = cellData.getValue().getEmployeeUUID(); // On récupère l'UUID stocké dans le pointage
+            Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
+            return new javafx.beans.property.SimpleStringProperty(emp != null ? emp.getFirstName() : "Inconnu");
+        });
+
+        colCheckLastName.setCellValueFactory(cellData -> {
+            UUID empId = cellData.getValue().getEmployeeUUID();
+            Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
+            return new javafx.beans.property.SimpleStringProperty(emp != null ? emp.getLastName() : "Inconnu");
+        });
+
+        colCheckDept.setCellValueFactory(cellData -> {
+            UUID empId = cellData.getValue().getEmployeeUUID();
+            Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
+            return new javafx.beans.property.SimpleStringProperty((emp != null && emp.getDepartment() != null) ? emp.getDepartment().toString() : "Aucun");
+        });
+
+        // 3. Les colonnes classiques de Check restent inchangées
         colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
         colTime.setCellValueFactory(new PropertyValueFactory<>("time"));
         colType.setCellValueFactory(new PropertyValueFactory<>("checkType"));
 
-        tablePointage.getColumns().addAll(colEmpUUID, colDate, colTime, colType);
-
-        ObservableList<Check> checkList =
-                FXCollections.observableArrayList(
-                        new Check(LocalDate.now(), LocalTime.of(8, 0), CheckType.IN, UUID.randomUUID()),
-                        new Check(LocalDate.now(), LocalTime.of(12, 0), CheckType.OUT, UUID.randomUUID()),
-                        new Check(LocalDate.now(), LocalTime.of(13, 0), CheckType.IN, UUID.randomUUID()),
-                        new Check(LocalDate.now(), LocalTime.of(17, 30), CheckType.OUT, UUID.randomUUID())
-                );
+        // 4. On ajoute toutes les colonnes dans la table
+        tablePointage.getColumns().addAll(colCheckFirstName, colCheckLastName, colCheckDept, colDate, colTime, colType);
 
         //connecte TableView sur la liste des pointages
         //serveur reçoit pointage = l'affiche ici
@@ -248,6 +272,16 @@ public class PrincipalIHM extends Application {
         stage.setWidth(screenBounds.getWidth());
         stage.setHeight(screenBounds.getHeight());
         stage.show();
+    }
+
+    private Employee trouverEmployeeParId(ObservableList<Employee> liste, UUID id) {
+        if (id == null) return null;
+        for (Employee e : liste) {
+            if (id.equals(e.getEmployeeId())) { // On vérifie si l'UUID correspond
+                return e;
+            }
+        }
+        return null;
     }
 
     public static void main(String[] args) {
