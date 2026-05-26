@@ -22,7 +22,6 @@ public class GestionPointage implements Serializable {
     // La liste standard utilisée uniquement pour la sérialisation (car ObservableList n'est pas sérialisable)
     private final List<Check> historiqueGlobal = new ArrayList<>();
 
-<<<<<<< HEAD
     public GestionPointage() {
         @SuppressWarnings("unchecked")
         List<Check> historiqueCharge = (List<Check>) Serialisation.loadObject(fileName);
@@ -34,10 +33,7 @@ public class GestionPointage implements Serializable {
         } else {
             System.out.println("Aucun historique de pointage trouvé. Création d'un nouveau fichier.");
         }
-=======
-    // --------------------------------------------------------
-    // --------------------------------------------------------
-
+    }
     /**
      * Construit un Check avec le bon CheckType calculé automatiquement.
      * À appeler depuis le Serveur au lieu de créer le Check manuellement.
@@ -92,7 +88,6 @@ public class GestionPointage implements Serializable {
             }
         }
         return null;
->>>>>>> 87cb440240f2fa0628f485030f61026b72cb1921
     }
 
     // Ajouter un pointage et mettre à jour la vue en même temps
@@ -100,7 +95,7 @@ public class GestionPointage implements Serializable {
         historiqueGlobal.add(check);
         sauvegarderDonnees();
         // Platform.runLater assure que la modification de l'IHM se fait sur le bon thread JavaFX
-        javafx.application.Platform.runLater(() -> listePointagesFX.add(check));
+        listePointagesFX.add(check);
     }
 
     public ObservableList<Check> getListePointagesFX() {
