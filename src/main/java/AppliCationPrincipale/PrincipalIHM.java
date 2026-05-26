@@ -21,7 +21,12 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
 
+import static Serveur.PointeuseIHM.setRefreshSeconds;
+
 public class PrincipalIHM extends Application {
+    private static String serverIp = "localhost";
+    private static int serverPort = 5001;
+    private static int refreshSeconds = 5;
 
     @Override
     public void start(Stage stage) {
@@ -31,10 +36,6 @@ public class PrincipalIHM extends Application {
         /* BACKEND */
         GestionPointage gestionPointage = new GestionPointage();
         GestionEmployee gestionEmployee = new GestionEmployee();
-
-        Server monServeur = new Server(gestionPointage);
-        monServeur.demarrer();
-
         /* NAVBAR */
 
         Button btnEmployee = new Button("Employee");
@@ -110,8 +111,19 @@ public class PrincipalIHM extends Application {
 
         tablePointage.getColumns().addAll(colEmpUUID, colDate, colTime, colType);
 
+<<<<<<< HEAD
         //connecte TableView sur la liste des pointages
         //serveur reçoit pointage = l'affiche ici
+=======
+        ObservableList<Check> checkList =
+                FXCollections.observableArrayList(
+                        new Check(LocalDate.now(), LocalTime.of(8, 0), CheckType.IN, UUID.randomUUID()),
+                        new Check(LocalDate.now(), LocalTime.of(12, 0), CheckType.OUT, UUID.randomUUID()),
+                        new Check(LocalDate.now(), LocalTime.of(13, 0), CheckType.IN, UUID.randomUUID()),
+                        new Check(LocalDate.now(), LocalTime.of(17, 30), CheckType.OUT, UUID.randomUUID())
+                );
+
+>>>>>>> 87cb440240f2fa0628f485030f61026b72cb1921
         tablePointage.setItems(gestionPointage.getListePointagesFX());
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -142,7 +154,6 @@ public class PrincipalIHM extends Application {
 
         Label lblTitleParam = new Label("Application Parameters");
 
-
         // Port
         Label lblPort = new Label("Port :");
         TextField txtPort = new TextField();
@@ -164,25 +175,33 @@ public class PrincipalIHM extends Application {
         Button btnSaveParams = new Button("Save Parameters");
         btnSaveParams.getStyleClass().add("action-button");
 
+        Label lblIp = new Label("Server IP :");
+        TextField txtIp = new TextField(serverIp);
+
         btnSaveParams.setOnAction(e -> {
 
             String appName = txtAppName.getText();
-            int refresh = refreshSpinner.getValue();
             boolean notifications = cbNotifications.isSelected();
 
             try {
 
                 int portValue = Integer.parseInt(txtPort.getText());
+                int refreshValue = refreshSpinner.getValue();
 
-                Server.changerPort(portValue);
+                serverIp = txtIp.getText();
+                serverPort = portValue;
+                refreshSeconds = refreshValue;
+
+                setRefreshSeconds(refreshValue);
 
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Parameters Saved");
                 alert.setHeaderText(null);
                 alert.setContentText(
-                        "Port serveur : " + portValue +
-                                "\nApplication : " + appName +
-                                "\nRefresh : " + refresh + " sec" +
+                        "IP serveur : " + serverIp +
+                                "\nPort (configuré) : " + serverPort +
+                                "\nApp : " + appName +
+                                "\nRefresh : " + refreshSeconds + " sec" +
                                 "\nNotifications : " + notifications
                 );
 
@@ -193,16 +212,18 @@ public class PrincipalIHM extends Application {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Erreur");
                 alert.setHeaderText(null);
-                alert.setContentText("Port invalide");
+                alert.setContentText("Valeurs invalides");
 
                 alert.showAndWait();
             }
         });
 
-
         GridPane paramGrid = new GridPane();
         paramGrid.setHgap(10);
         paramGrid.setVgap(15);
+
+        paramGrid.add(lblIp, 0, 0);
+        paramGrid.add(txtIp, 1, 0);
 
         paramGrid.add(lblPort, 0, 1);
         paramGrid.add(txtPort, 1, 1);
