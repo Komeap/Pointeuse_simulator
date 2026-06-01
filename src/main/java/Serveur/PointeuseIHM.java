@@ -37,7 +37,7 @@ public class PointeuseIHM extends Application {
 
     private static List<Message> bufferPointages = Collections.synchronizedList(new ArrayList<>());
     private static String serverIp = "localhost";
-    private static int serverPort = 5001;
+    private static int serverPort = 5005;
     private static int refreshSeconds = 5;
 
     public static synchronized void setServerIp(String ip) {

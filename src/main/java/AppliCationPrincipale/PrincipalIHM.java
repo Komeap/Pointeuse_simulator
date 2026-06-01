@@ -24,13 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static Serveur.PointeuseIHM.setRefreshSeconds;
 
 public class PrincipalIHM extends Application {
-    private static String serverIp = "localhost";
-    private static int serverPort = 5001;
-    private static int refreshSeconds = 5;
-
     @Override
     public void start(Stage stage) {
 
@@ -52,13 +47,11 @@ public class PrincipalIHM extends Application {
 
         Button btnEmployee = new Button("Employee");
         Button btnPointage = new Button("Check");
-        Button btnParameter = new Button("Parameter");
 
         btnEmployee.getStyleClass().add("nav-button");
         btnPointage.getStyleClass().add("nav-button");
-        btnParameter.getStyleClass().add("nav-button");
 
-        HBox navbar = new HBox(15, btnEmployee, btnPointage, btnParameter);
+        HBox navbar = new HBox(15, btnEmployee, btnPointage);
         navbar.getStyleClass().add("navbar");
 
         /* TABLE EMPLOYEES */
@@ -184,108 +177,10 @@ public class PrincipalIHM extends Application {
 
         pagePointage.setPadding(new Insets(15));
 
-        /* PAGE PARAMETRES */
-
-        Label lblTitleParam = new Label("Application Parameters");
-
-
-        // Port
-        Label lblPort = new Label("Port :");
-        TextField txtPort = new TextField();
-        txtPort.setPromptText("5001");
-
-        // Nom application
-        Label lblAppName = new Label("Application Name :");
-        TextField txtAppName = new TextField();
-        txtAppName.setPromptText("PointageApp");
-
-        // Temps de rafraîchissement
-        Label lblRefresh = new Label("Refresh Delay (sec) :");
-        Spinner<Integer> refreshSpinner = new Spinner<>(1, 60, 5);
-
-        // Activation notifications
-        CheckBox cbNotifications = new CheckBox("Enable notifications");
-
-        // Bouton sauvegarde
-        Button btnSaveParams = new Button("Save Parameters");
-        btnSaveParams.getStyleClass().add("action-button");
-
-        Label lblIp = new Label("Server IP :");
-        TextField txtIp = new TextField(serverIp);
-
-        btnSaveParams.setOnAction(e -> {
-
-            String appName = txtAppName.getText();
-            int refresh = refreshSpinner.getValue();
-            boolean notifications = cbNotifications.isSelected();
-
-            try {
-
-                int portValue = Integer.parseInt(txtPort.getText());
-                int refreshValue = refreshSpinner.getValue();
-
-                serverIp = txtIp.getText();
-                serverPort = portValue;
-                refreshSeconds = refreshValue;
-
-                setRefreshSeconds(refreshValue);
-
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Parameters Saved");
-                alert.setHeaderText(null);
-                alert.setContentText(
-                        "IP serveur : " + serverIp +
-                                "\nPort (configuré) : " + serverPort +
-                                "\nApp : " + appName +
-                                "\nRefresh : " + refreshSeconds + " sec" +
-                                "\nNotifications : " + notifications
-                );
-
-                alert.showAndWait();
-
-            } catch (Exception ex) {
-
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Erreur");
-                alert.setHeaderText(null);
-                alert.setContentText("Valeurs invalides");
-
-                alert.showAndWait();
-            }
-        });
-
-
-        GridPane paramGrid = new GridPane();
-        paramGrid.setHgap(10);
-        paramGrid.setVgap(15);
-
-        paramGrid.add(lblIp, 0, 0);
-        paramGrid.add(txtIp, 1, 0);
-
-        paramGrid.add(lblPort, 0, 1);
-        paramGrid.add(txtPort, 1, 1);
-
-        paramGrid.add(lblAppName, 0, 2);
-        paramGrid.add(txtAppName, 1, 2);
-
-        paramGrid.add(lblRefresh, 0, 3);
-        paramGrid.add(refreshSpinner, 1, 3);
-
-        paramGrid.add(cbNotifications, 1, 4);
-
-        VBox pageParameter = new VBox(20,
-                lblTitleParam,
-                paramGrid,
-                btnSaveParams
-        );
-
-        pageParameter.setPadding(new Insets(20));
-
         /* NAV ACTIONS */
 
         btnEmployee.setOnAction(e -> root.setCenter(pageEmployee));
         btnPointage.setOnAction(e -> root.setCenter(pagePointage));
-        btnParameter.setOnAction(e -> root.setCenter(pageParameter));
 
         /* ROOT */
 
