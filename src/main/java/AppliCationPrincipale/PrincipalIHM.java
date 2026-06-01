@@ -157,7 +157,7 @@ public class PrincipalIHM extends Application {
                         new Check(LocalDate.now(), LocalTime.of(13, 0), CheckType.IN, UUID.randomUUID()),
                         new Check(LocalDate.now(), LocalTime.of(17, 30), CheckType.OUT, UUID.randomUUID())
                 );
-        
+
         tablePointage.setItems(gestionPointage.getListePointagesFX());
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
