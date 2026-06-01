@@ -2,46 +2,44 @@ package AppliCationPrincipale;
 
 import Employee.Employee;
 import Planning.WorkDay;
-import Serveur.Serialisation;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
 import javafx.scene.control.Label;
 
 import java.time.DayOfWeek;
-import java.util.List;
 
 public class PlanningService {
 
-    public void chargerPlanning(HBox barre, Label labelInfo, String id) {
-        // Récupération de l'employé via la base de données
-        List<Employee> employees = (List<Employee>) Serialisation.loadObject("employees.ser");
-        assert employees != null;
-        Employee emp = employees.stream()
-                .filter(e -> e.getEmployeeId().toString().equals(id))
-                .findFirst()
-                .orElse(null);
-
+    /**
+     * Charge  le planning visuel d'un employé pour un jour donné
+     */
+    public void chargerPlanning(HBox barre, Label labelInfo, Employee emp, DayOfWeek jour) {
         if (emp != null && emp.getPlanning() != null) {
             barre.getChildren().clear();
-            barre.setSpacing(1);
+            barre.setSpacing(2);
 
-            // On récupère le premier jour du planning
-            WorkDay j = emp.getPlanning().getWorkDay(DayOfWeek.valueOf("monday"));
+            WorkDay j = emp.getPlanning().getWorkDay(jour);
 
-            // Calcul des index (1 heure = 4 quarts d'heure)
-            int debut = j.getStartTime().getHour() * 4 + (j.getStartTime().getMinute() / 15);
-            int fin = j.getEndTime().getHour() * 4 + (j.getEndTime().getMinute() / 15);
+            if (j != null && j.getStartTime() != null && j.getEndTime() != null) {
+                // Calcul des index (1 heure = 4 quarts d'heure, 24h = 96 rectangles)
+                int debut = j.getStartTime().getHour() * 4 + (j.getStartTime().getMinute() / 15);
+                int fin = j.getEndTime().getHour() * 4 + (j.getEndTime().getMinute() / 15);
 
-            for (int i = 0; i < 96; i++) {
-                Rectangle r = new Rectangle(10, 20);
-                r.setFill((i >= debut && i < fin) ? Color.CORNFLOWERBLUE : Color.LIGHTGRAY);
-                barre.getChildren().add(r);
+                for (int i = 0; i < 96; i++) {
+                    Rectangle r = new Rectangle(12, 25);
+                    // Si l'index est entre le début et la fin du travail Bleu, sinon Gris
+                    r.setFill((i >= debut && i < fin) ? Color.CORNFLOWERBLUE : Color.LIGHTGRAY);
+                    barre.getChildren().add(r);
+                }
+                labelInfo.setText("Planning du " + jour + " pour " + emp.getFirstName() + " : " + j.getStartTime() + " - " + j.getEndTime());
+            } else {
+                barre.getChildren().clear();
+                labelInfo.setText("Aucune heure de travail définie ce jour pour " + emp.getFirstName());
             }
-
-            labelInfo.setText("Horaire : " + j.getStartTime() + " - " + j.getEndTime());
         } else {
-            labelInfo.setText("Aucun planning trouvé pour cet employé.");
+            barre.getChildren().clear();
+            labelInfo.setText("Aucun planning disponible pour cet employé.");
         }
     }
 }

@@ -113,10 +113,54 @@ public class PrincipalIHM extends Application {
             gestionEmployee.supprimerEmployee(selection);
         });
 
-        VBox pageEmployee = new VBox(10,
+        PlanningService planningService = new PlanningService();
+        HBox barrePlanningVisualisation = new HBox();
+        Label lblInfoPlanning = new Label("Sélectionnez un employé pour afficher son planning");
+        lblInfoPlanning.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 14px;");
+
+        HBox selecteurJours = new HBox(10);
+        ToggleGroup groupeJours = new ToggleGroup();
+
+        java.time.DayOfWeek[] joursSemaine = {
+                java.time.DayOfWeek.MONDAY,
+                java.time.DayOfWeek.TUESDAY,
+                java.time.DayOfWeek.WEDNESDAY,
+                java.time.DayOfWeek.THURSDAY,
+                java.time.DayOfWeek.FRIDAY,
+                java.time.DayOfWeek.SATURDAY,
+                java.time.DayOfWeek.SUNDAY
+        };
+
+        String[] nomsJours = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"};
+
+        for (int i = 0; i < joursSemaine.length; i++) {
+            ToggleButton btnJour = new ToggleButton(nomsJours[i]);
+            btnJour.setToggleGroup(groupeJours);
+            btnJour.setUserData(joursSemaine[i]);
+            if (i == 0) btnJour.setSelected(true);
+            selecteurJours.getChildren().add(btnJour);
+        }
+
+        tableEmployee.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            mettreAJourPlanningVisuel(tableEmployee, groupeJours, planningService, barrePlanningVisualisation, lblInfoPlanning);
+        });
+
+        groupeJours.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null) {
+                groupeJours.selectToggle(oldVal);
+            } else {
+                mettreAJourPlanningVisuel(tableEmployee, groupeJours, planningService, barrePlanningVisualisation, lblInfoPlanning);
+            }
+        });
+
+        VBox pageEmployee = new VBox(15,
                 new Label("Employees"),
                 employeeActions,
-                tableEmployee
+                tableEmployee,
+                new Separator(),
+                selecteurJours,
+                lblInfoPlanning,
+                barrePlanningVisualisation
         );
 
         pageEmployee.setPadding(new Insets(15));
@@ -287,5 +331,15 @@ public class PrincipalIHM extends Application {
 
     public static void main(String[] args) {
         launch();
+    }
+
+    private void mettreAJourPlanningVisuel(TableView<Employee> table, ToggleGroup groupe, PlanningService service, HBox barre, Label label) {
+        Employee empSelectionne = table.getSelectionModel().getSelectedItem();
+        ToggleButton jourSelectionne = (ToggleButton) groupe.getSelectedToggle();
+
+        if (empSelectionne != null && jourSelectionne != null) {
+            java.time.DayOfWeek jour = (java.time.DayOfWeek) jourSelectionne.getUserData();
+            service.chargerPlanning(barre, label, empSelectionne, jour);
+        }
     }
 }

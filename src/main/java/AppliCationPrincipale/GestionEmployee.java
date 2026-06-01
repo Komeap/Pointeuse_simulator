@@ -67,11 +67,29 @@ public class GestionEmployee {
 
         dialog.getDialogPane().setContent(grid);
 
-        // Conversion du résultat quand on clique sur "Ajouter"
+        //conversion du résultat quand on clique sur "Ajouter"
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == btnValider) {
-                // Assure-toi que ton constructeur Employee correspond bien à ces paramètres !
-                return new Employee(firstNameField.getText(), lastNameField.getText(), deptComboBox.getValue(), null);
+
+                //création d'un planning par défaut pour nouvel employé
+                Planning.Planning defaultPlanning = new Planning.Planning();
+
+                // On définit une journée type
+                Planning.WorkDay journeeType = new Planning.WorkDay(
+                        java.time.LocalTime.of(8, 0),
+                        java.time.LocalTime.of(17, 0)
+                );
+
+                //on ajoute pour les jours de la semaine
+                defaultPlanning.setWorkDay(java.time.DayOfWeek.MONDAY, journeeType);
+                defaultPlanning.setWorkDay(java.time.DayOfWeek.TUESDAY, journeeType);
+                defaultPlanning.setWorkDay(java.time.DayOfWeek.WEDNESDAY, journeeType);
+                defaultPlanning.setWorkDay(java.time.DayOfWeek.THURSDAY, journeeType);
+                defaultPlanning.setWorkDay(java.time.DayOfWeek.FRIDAY, journeeType);
+                defaultPlanning.setWorkDay(java.time.DayOfWeek.SATURDAY, journeeType);
+                defaultPlanning.setWorkDay(java.time.DayOfWeek.SUNDAY, journeeType);
+
+                return new Employee(firstNameField.getText(), lastNameField.getText(), deptComboBox.getValue(), defaultPlanning);
             }
             return null;
         });
