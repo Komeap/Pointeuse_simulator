@@ -1,12 +1,12 @@
 package Entreprise;
 
 import Employee.Employee;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Department {
-
+public class Department implements Serializable{
+	private static final long serialVersionUID = 1L;
 	private String depName; //name of departement
 
 	private List <Employee> employeeList; //list of employees who are in this departement
@@ -46,5 +46,11 @@ public class Department {
 	{
 		this.employeeList.remove(employee);
 	}
+
+	@Override
+	public String toString() {
+		return this.depName; // Permet à JavaFX d'afficher le nom du département
+	}
+
 }
 

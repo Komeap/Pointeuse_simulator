@@ -1,22 +1,27 @@
 package AppliCationPrincipale;
 
 import Employee.Employee;
+import Entreprise.Department;
 import Serveur.Serialisation;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TextInputDialog;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class GestionEmployee {
     private ObservableList<Employee> employeeList;
+    private ObservableList<Department> departmentList;
     private static final String fileName = "employees.ser"; //nom du fichier contenant les employés
 
     //Ici on init les employees par défaut ais faudra le modif merci
-    public GestionEmployee() {
+    public GestionEmployee(List<Department> departments) {
         this.employeeList = FXCollections.observableArrayList();
+        this.departmentList = FXCollections.observableArrayList(departments);
 
         List<Employee> loadFile = (List<Employee>) Serialisation.loadObject(fileName);
         if (loadFile != null && !loadFile.isEmpty()) {
@@ -29,7 +34,7 @@ public class GestionEmployee {
         return employeeList;
     }
 
-    public void ajouterEmployee()
+    /*public void ajouterEmployee()
     {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Ajouter un employe");
@@ -44,6 +49,56 @@ public class GestionEmployee {
                 sauvegarderDonnees();
             }
         });
+    }*/
+
+    public void ajouterEmployee() {
+        // Création d'une boîte de dialogue personnalisée
+        Dialog<Employee> dialog = new Dialog<>();
+        dialog.setTitle("Ajouter un employé");
+        dialog.setHeaderText("Veuillez remplir les informations de l'employé");
+
+        ButtonType btnValider = new ButtonType("Ajouter", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnValider, ButtonType.CANCEL);
+
+        // Création des champs de saisie
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField firstNameField = new TextField();
+        firstNameField.setPromptText("Prénom");
+        TextField lastNameField = new TextField();
+        lastNameField.setPromptText("Nom");
+        ComboBox<Department> deptComboBox = new ComboBox<>(departmentList);
+        deptComboBox.setPromptText("Sélectionner un département");
+
+        grid.add(new Label("Prénom:"), 0, 0);
+        grid.add(firstNameField, 1, 0);
+        grid.add(new Label("Nom:"), 0, 1);
+        grid.add(lastNameField, 1, 1);
+        grid.add(new Label("Département:"), 0, 2);
+        grid.add(deptComboBox, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+
+        // Conversion du résultat quand on clique sur "Ajouter"
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == btnValider) {
+                // Assure-toi que ton constructeur Employee correspond bien à ces paramètres !
+                return new Employee(firstNameField.getText(), lastNameField.getText(), deptComboBox.getValue(), null);
+            }
+            return null;
+        });
+
+        Optional<Employee> result = dialog.showAndWait();
+        result.ifPresent(employee -> {
+            employeeList.add(employee);
+            if(employee.getDepartment() != null) {
+                employee.getDepartment().addEmployee(employee);
+            }
+            sauvegarderDonnees();
+        });
     }
 
     private void sauvegarderDonnees() {
@@ -51,7 +106,7 @@ public class GestionEmployee {
         Serialisation.saveObject(new ArrayList<>(employeeList), fileName);
     }
 
-    public void modifierEmployee(Employee selectedEmployee) {
+    /*public void modifierEmployee(Employee selectedEmployee) {
         if (selectedEmployee == null) {
             afficherAlerteSelection();
             return;
@@ -74,12 +129,79 @@ public class GestionEmployee {
                 sauvegarderDonnees();
             }
         });
+    }*/
+
+    public void modifierEmployee(Employee selectedEmployee) {
+        if (selectedEmployee == null) {
+            afficherAlerteSelection();
+            return;
+        }
+
+        Dialog<Employee> dialog = new Dialog<>();
+        dialog.setTitle("Modifier un employé");
+        dialog.setHeaderText("Modification de : " + selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName());
+
+        ButtonType btnValider = new ButtonType("Sauvegarder", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(btnValider, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        // On pré-remplit les champs avec les données actuelles
+        TextField firstNameField = new TextField(selectedEmployee.getFirstName());
+        TextField lastNameField = new TextField(selectedEmployee.getLastName());
+        ComboBox<Department> deptComboBox = new ComboBox<>(departmentList);
+        deptComboBox.setValue(selectedEmployee.getDepartment());
+
+        grid.add(new Label("Prénom:"), 0, 0);
+        grid.add(firstNameField, 1, 0);
+        grid.add(new Label("Nom:"), 0, 1);
+        grid.add(lastNameField, 1, 1);
+        grid.add(new Label("Département:"), 0, 2);
+        grid.add(deptComboBox, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == btnValider) {
+                selectedEmployee.setFirstName(firstNameField.getText());
+                selectedEmployee.setLastName(lastNameField.getText());
+
+                // Gestion propre du changement de département
+                Department ancienDept = selectedEmployee.getDepartment();
+                Department nouveauDept = deptComboBox.getValue();
+
+                if (ancienDept != null && !ancienDept.equals(nouveauDept)) {
+                    ancienDept.removeEmployee(selectedEmployee); // On le retire de l'ancien
+                }
+                if (nouveauDept != null && !nouveauDept.equals(ancienDept)) {
+                    nouveauDept.addEmployee(selectedEmployee); // On l'ajoute au nouveau
+                }
+
+                selectedEmployee.setDepartment(nouveauDept);
+                return selectedEmployee;
+            }
+            return null;
+        });
+
+        Optional<Employee> result = dialog.showAndWait();
+        result.ifPresent(employee -> {
+            // Force le rafraîchissement visuel de la table
+            int index = employeeList.indexOf(employee);
+            employeeList.set(index, employee);
+            sauvegarderDonnees();
+        });
     }
 
     public void supprimerEmployee(Employee selectedEmployee) {
         if (selectedEmployee == null) {
             afficherAlerteSelection();
             return;
+        }
+        if (selectedEmployee.getDepartment() != null) {
+            selectedEmployee.getDepartment().removeEmployee(selectedEmployee);
         }
         employeeList.remove(selectedEmployee);
         sauvegarderDonnees();
