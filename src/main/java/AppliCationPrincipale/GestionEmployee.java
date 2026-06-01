@@ -21,7 +21,7 @@ public class GestionEmployee {
     //Ici on init les employees par défaut ais faudra le modif merci
     public GestionEmployee(List<Department> departments) {
         this.employeeList = FXCollections.observableArrayList();
-        this.departmentList = FXCollections.observableArrayList(departments);
+        this.departmentList = (ObservableList<Department>) departments;
 
         List<Employee> loadFile = (List<Employee>) Serialisation.loadObject(fileName);
         if (loadFile != null && !loadFile.isEmpty()) {
@@ -34,22 +34,6 @@ public class GestionEmployee {
         return employeeList;
     }
 
-    /*public void ajouterEmployee()
-    {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Ajouter un employe");
-        dialog.setHeaderText("Création d'un nouvel employe");
-        dialog.setContentText("Entrez le nom prenom :");
-
-        Optional<String> result = dialog.showAndWait();
-        result.ifPresent(name -> {
-            String[] parts = name.split(" ");
-            if (parts.length >= 2) {
-                employeeList.add(new Employee(parts[0], parts[1], null, null));
-                sauvegarderDonnees();
-            }
-        });
-    }*/
 
     public void ajouterEmployee() {
         // Création d'une boîte de dialogue personnalisée
@@ -70,7 +54,8 @@ public class GestionEmployee {
         firstNameField.setPromptText("Prénom");
         TextField lastNameField = new TextField();
         lastNameField.setPromptText("Nom");
-        ComboBox<Department> deptComboBox = new ComboBox<>(departmentList);
+        ComboBox<Department> deptComboBox = new ComboBox<>();
+        deptComboBox.setItems(departmentList);
         deptComboBox.setPromptText("Sélectionner un département");
 
         grid.add(new Label("Prénom:"), 0, 0);
@@ -106,30 +91,6 @@ public class GestionEmployee {
         Serialisation.saveObject(new ArrayList<>(employeeList), fileName);
     }
 
-    /*public void modifierEmployee(Employee selectedEmployee) {
-        if (selectedEmployee == null) {
-            afficherAlerteSelection();
-            return;
-        }
-
-        TextInputDialog dialog = new TextInputDialog(selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName());
-        dialog.setTitle("Modifier un employé");
-        //dialog.setHeaderText("Modification de : " + selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName());
-        dialog.setContentText("Modifier le prénom et le nom :");
-
-        Optional<String> result = dialog.showAndWait();
-        result.ifPresent(name -> {
-            String[] parts = name.split(" ");
-            if (parts.length >= 2) {
-                selectedEmployee.setFirstName(parts[0]);
-                selectedEmployee.setLastName(parts[1]);
-                //Astuce JavaFX : force le rafraîchissement visuel de la table
-                int index = employeeList.indexOf(selectedEmployee);
-                employeeList.set(index, selectedEmployee);
-                sauvegarderDonnees();
-            }
-        });
-    }*/
 
     public void modifierEmployee(Employee selectedEmployee) {
         if (selectedEmployee == null) {
@@ -152,7 +113,8 @@ public class GestionEmployee {
         // On pré-remplit les champs avec les données actuelles
         TextField firstNameField = new TextField(selectedEmployee.getFirstName());
         TextField lastNameField = new TextField(selectedEmployee.getLastName());
-        ComboBox<Department> deptComboBox = new ComboBox<>(departmentList);
+        ComboBox<Department> deptComboBox = new ComboBox<>();
+        deptComboBox.setItems(departmentList);
         deptComboBox.setValue(selectedEmployee.getDepartment());
 
         grid.add(new Label("Prénom:"), 0, 0);
