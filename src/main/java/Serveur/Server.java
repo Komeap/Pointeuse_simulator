@@ -12,7 +12,7 @@ import java.util.List;
 public class Server {
 
     private final GestionPointage gestionPointage;
-    private static final int PORT = 5001;
+    private static final int PORT = 5005;
     private static ServerSocket serverSocket;
 
     public Server(GestionPointage gestionPointage) {
