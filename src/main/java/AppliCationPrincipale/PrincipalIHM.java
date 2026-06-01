@@ -42,14 +42,8 @@ public class PrincipalIHM extends Application {
         List<Department> loaded =
                 (List<Department>) Serialisation.loadObject(DEPARTMENT_FILE);
 
-        if (loaded != null && !loaded.isEmpty()) {
+        if (loaded != null) {
             departments.addAll(loaded);
-        } else {
-            departments.addAll(
-                    new Department("Ressources Humaines"),
-                    new Department("Développement IT"),
-                    new Department("Comptabilité")
-            );
         }
 
         GestionEmployee gestionEmployee = new GestionEmployee(departments);
