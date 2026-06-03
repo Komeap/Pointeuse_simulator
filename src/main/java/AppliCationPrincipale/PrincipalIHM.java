@@ -42,14 +42,16 @@ public class PrincipalIHM extends Application {
         departmentsInitiaux.add(new Department("IT Development"));
         departmentsInitiaux.add(new Department("Accounting"));
 
-
         ObservableList<Department> departments = FXCollections.observableArrayList();
 
-        List<Department> loaded =
-                (List<Department>) Serialisation.loadObject(DEPARTMENT_FILE);
+        @SuppressWarnings("unchecked")
+        List<Department> loaded = (List<Department>) Serialisation.loadObject(DEPARTMENT_FILE);
 
         if (loaded != null) {
             departments.addAll(loaded);
+        } else {
+            // Si le fichier n'existe pas encore, on charge ceux par défaut
+            departments.addAll(departmentsInitiaux);
         }
 
         GestionEmployee gestionEmployee = new GestionEmployee(departments);
@@ -169,15 +171,10 @@ public class PrincipalIHM extends Application {
 
         TableView<Check> tablePointage = new TableView<>();
 
-
-        // 1. On crée 3 nouvelles colonnes à la place de la colonne UUID
+        // Les colonnes en anglais uniquement
         TableColumn<Check, String> colCheckFirstName = new TableColumn<>("First Name");
         TableColumn<Check, String> colCheckLastName = new TableColumn<>("Last Name");
         TableColumn<Check, String> colCheckDept = new TableColumn<>("Department");
-
-        TableColumn<Check, String> colCheckFirstName = new TableColumn<>("Prénom");
-        TableColumn<Check, String> colCheckLastName = new TableColumn<>("Nom");
-        TableColumn<Check, String> colCheckDept = new TableColumn<>("Département");
 
         TableColumn<Check, LocalDate> colDate = new TableColumn<>("Date");
         TableColumn<Check, LocalTime> colTime = new TableColumn<>("Time");
@@ -261,21 +258,14 @@ public class PrincipalIHM extends Application {
 
             dialog.showAndWait().ifPresent(name -> {
                 if (!name.trim().isEmpty()) {
-
                     Department d = new Department(name);
-
                     departments.add(d);
-
-                    Serialisation.saveObject(
-                            new ArrayList<>(departments),
-                            DEPARTMENT_FILE
-                    );
+                    Serialisation.saveObject(new ArrayList<>(departments), DEPARTMENT_FILE);
                 }
             });
         });
 
         btnDeleteDepartment.setOnAction(e -> {
-
             Department dep = tableDepartment.getSelectionModel().getSelectedItem();
             if (dep == null) return;
 
@@ -293,10 +283,7 @@ public class PrincipalIHM extends Application {
             tableEmployee.refresh();
             tablePointage.refresh();
 
-            Serialisation.saveObject(
-                    new ArrayList<>(departments),
-                    DEPARTMENT_FILE
-            );
+            Serialisation.saveObject(new ArrayList<>(departments), DEPARTMENT_FILE);
         });
 
         HBox departmentActions = new HBox(10, btnAddDepartment, btnDeleteDepartment);
