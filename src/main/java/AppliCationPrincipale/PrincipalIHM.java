@@ -34,9 +34,9 @@ public class PrincipalIHM extends Application {
         /* BACKEND */
         GestionPointage gestionPointage = new GestionPointage();
         List<Department> departmentsInitiaux = new ArrayList<>();
-        departmentsInitiaux.add(new Department("Ressources Humaines"));
-        departmentsInitiaux.add(new Department("Développement IT"));
-        departmentsInitiaux.add(new Department("Comptabilité"));
+        departmentsInitiaux.add(new Department("Human Resources"));
+        departmentsInitiaux.add(new Department("IT Development"));
+        departmentsInitiaux.add(new Department("Accounting"));
 
         GestionEmployee gestionEmployee = new GestionEmployee(departmentsInitiaux);
 
@@ -59,8 +59,8 @@ public class PrincipalIHM extends Application {
         TableView<Employee> tableEmployee = new TableView<>();
 
         TableColumn<Employee, String> colEmpId = new TableColumn<>("UUID");
-        TableColumn<Employee, String> colFirstName = new TableColumn<>("Prénom");
-        TableColumn<Employee, String> colLastName = new TableColumn<>("Nom");
+        TableColumn<Employee, String> colFirstName = new TableColumn<>("First Name");
+        TableColumn<Employee, String> colLastName = new TableColumn<>("Last Name");
         TableColumn<Employee, String> colDepartment = new TableColumn<>("Department");
 
         colEmpId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
@@ -94,7 +94,7 @@ public class PrincipalIHM extends Application {
 
         PlanningService planningService = new PlanningService();
         HBox barrePlanningVisualisation = new HBox();
-        Label lblInfoPlanning = new Label("Sélectionnez un employé pour afficher son planning");
+        Label lblInfoPlanning = new Label("Select an employee to display their schedule");
         lblInfoPlanning.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 14px;");
 
         HBox selecteurJours = new HBox(10);
@@ -110,7 +110,7 @@ public class PrincipalIHM extends Application {
                 java.time.DayOfWeek.SUNDAY
         };
 
-        String[] nomsJours = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"};
+        String[] nomsJours = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 
         for (int i = 0; i < joursSemaine.length; i++) {
             ToggleButton btnJour = new ToggleButton(nomsJours[i]);
@@ -149,9 +149,9 @@ public class PrincipalIHM extends Application {
         TableView<Check> tablePointage = new TableView<>();
 
         // 1. On crée 3 nouvelles colonnes à la place de la colonne UUID
-        TableColumn<Check, String> colCheckFirstName = new TableColumn<>("Prénom");
-        TableColumn<Check, String> colCheckLastName = new TableColumn<>("Nom");
-        TableColumn<Check, String> colCheckDept = new TableColumn<>("Département");
+        TableColumn<Check, String> colCheckFirstName = new TableColumn<>("First Name");
+        TableColumn<Check, String> colCheckLastName = new TableColumn<>("Last Name");
+        TableColumn<Check, String> colCheckDept = new TableColumn<>("Department");
 
         TableColumn<Check, LocalDate> colDate = new TableColumn<>("Date");
         TableColumn<Check, LocalTime> colTime = new TableColumn<>("Time");
@@ -161,19 +161,19 @@ public class PrincipalIHM extends Application {
         colCheckFirstName.setCellValueFactory(cellData -> {
             UUID empId = cellData.getValue().getEmployeeUUID(); // On récupère l'UUID stocké dans le pointage
             Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
-            return new javafx.beans.property.SimpleStringProperty(emp != null ? emp.getFirstName() : "Inconnu");
+            return new javafx.beans.property.SimpleStringProperty(emp != null ? emp.getFirstName() : "Unknown");
         });
 
         colCheckLastName.setCellValueFactory(cellData -> {
             UUID empId = cellData.getValue().getEmployeeUUID();
             Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
-            return new javafx.beans.property.SimpleStringProperty(emp != null ? emp.getLastName() : "Inconnu");
+            return new javafx.beans.property.SimpleStringProperty(emp != null ? emp.getLastName() : "Unknown");
         });
 
         colCheckDept.setCellValueFactory(cellData -> {
             UUID empId = cellData.getValue().getEmployeeUUID();
             Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
-            return new javafx.beans.property.SimpleStringProperty((emp != null && emp.getDepartment() != null) ? emp.getDepartment().toString() : "Aucun");
+            return new javafx.beans.property.SimpleStringProperty((emp != null && emp.getDepartment() != null) ? emp.getDepartment().toString() : "None");
         });
 
         // 3. Les colonnes classiques de Check restent inchangées
