@@ -24,7 +24,7 @@ public class GestionEmployee {
 
     public GestionEmployee(List<Department> departments) {
         this.employeeList = FXCollections.observableArrayList();
-        this.departmentList = FXCollections.observableArrayList(departments);
+        this.departmentList = (ObservableList<Department>) departments;
 
         @SuppressWarnings("unchecked")
         List<Employee> loadFile = (List<Employee>) Serialisation.loadObject(fileName);
@@ -52,9 +52,15 @@ public class GestionEmployee {
         TextField firstNameField = new TextField();
         firstNameField.setPromptText("First Name");
         TextField lastNameField = new TextField();
+
         lastNameField.setPromptText("Last Name");
         ComboBox<Department> deptComboBox = new ComboBox<>(departmentList);
         deptComboBox.setPromptText("Select a department");
+
+        lastNameField.setPromptText("Nom");
+        ComboBox<Department> deptComboBox = new ComboBox<>();
+        deptComboBox.setItems(departmentList);
+        deptComboBox.setPromptText("Sélectionner un département");
 
         gridInfo.add(new Label("First Name:"), 0, 0);
         gridInfo.add(firstNameField, 1, 0);
@@ -115,6 +121,11 @@ public class GestionEmployee {
         });
     }
 
+    private void sauvegarderDonnees() {
+        // On convertit l'ObservableList en ArrayList classique pour la sérialisation
+        Serialisation.saveObject(new ArrayList<>(employeeList), fileName);
+    }
+
     public void modifierEmployee(Employee selectedEmployee) {
         if (selectedEmployee == null) {
             afficherErreur("Missing Selection", "Please select an employee from the table first.");
@@ -134,7 +145,8 @@ public class GestionEmployee {
 
         TextField firstNameField = new TextField(selectedEmployee.getFirstName());
         TextField lastNameField = new TextField(selectedEmployee.getLastName());
-        ComboBox<Department> deptComboBox = new ComboBox<>(departmentList);
+        ComboBox<Department> deptComboBox = new ComboBox<>();
+        deptComboBox.setItems(departmentList);
         deptComboBox.setValue(selectedEmployee.getDepartment());
 
         gridInfo.add(new Label("First Name:"), 0, 0);

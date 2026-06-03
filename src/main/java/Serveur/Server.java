@@ -45,11 +45,6 @@ public class Server {
 
                         gestionPointage.ajouterPointage(nouveauCheck);
 
-                        Serialisation.saveObject(
-                                gestionPointage.getHistoriqueGlobal(),
-                                "base_centrale.ser"
-                        );
-
                         System.out.println("Pointage reçu : " + msg.getIdEmp());
 
                     } catch (Exception e) {

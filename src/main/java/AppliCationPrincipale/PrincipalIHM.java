@@ -5,6 +5,7 @@ import Check.CheckType;
 import Employee.Employee;
 import Entreprise.Department;
 import Serveur.Server;
+import Serveur.Serialisation;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -24,8 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-
 public class PrincipalIHM extends Application {
+
+    private static final String DEPARTMENT_FILE = "departments.ser";
+
     @Override
     public void start(Stage stage) {
 
@@ -33,12 +36,23 @@ public class PrincipalIHM extends Application {
 
         /* BACKEND */
         GestionPointage gestionPointage = new GestionPointage();
+
         List<Department> departmentsInitiaux = new ArrayList<>();
         departmentsInitiaux.add(new Department("Human Resources"));
         departmentsInitiaux.add(new Department("IT Development"));
         departmentsInitiaux.add(new Department("Accounting"));
 
-        GestionEmployee gestionEmployee = new GestionEmployee(departmentsInitiaux);
+
+        ObservableList<Department> departments = FXCollections.observableArrayList();
+
+        List<Department> loaded =
+                (List<Department>) Serialisation.loadObject(DEPARTMENT_FILE);
+
+        if (loaded != null) {
+            departments.addAll(loaded);
+        }
+
+        GestionEmployee gestionEmployee = new GestionEmployee(departments);
 
         Server monServeur = new Server(gestionPointage);
         monServeur.demarrer();
@@ -47,11 +61,13 @@ public class PrincipalIHM extends Application {
 
         Button btnEmployee = new Button("Employee");
         Button btnPointage = new Button("Check");
+        Button btnDepartment = new Button("Department");
 
         btnEmployee.getStyleClass().add("nav-button");
         btnPointage.getStyleClass().add("nav-button");
+        btnDepartment.getStyleClass().add("nav-button");
 
-        HBox navbar = new HBox(15, btnEmployee, btnPointage);
+        HBox navbar = new HBox(15, btnEmployee, btnPointage, btnDepartment);
         navbar.getStyleClass().add("navbar");
 
         /* TABLE EMPLOYEES */
@@ -66,7 +82,12 @@ public class PrincipalIHM extends Application {
         colEmpId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         colFirstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         colLastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
-        colDepartment.setCellValueFactory(new PropertyValueFactory<>("department"));
+        colDepartment.setCellValueFactory(cellData -> {
+            Department dep = cellData.getValue().getDepartment();
+            return new javafx.beans.property.SimpleStringProperty(
+                    dep == null ? "N/A" : dep.getDepartement()
+            );
+        });
 
         tableEmployee.getColumns().addAll(colEmpId, colFirstName, colLastName, colDepartment);
 
@@ -148,18 +169,22 @@ public class PrincipalIHM extends Application {
 
         TableView<Check> tablePointage = new TableView<>();
 
+
         // 1. On crée 3 nouvelles colonnes à la place de la colonne UUID
         TableColumn<Check, String> colCheckFirstName = new TableColumn<>("First Name");
         TableColumn<Check, String> colCheckLastName = new TableColumn<>("Last Name");
         TableColumn<Check, String> colCheckDept = new TableColumn<>("Department");
 
+        TableColumn<Check, String> colCheckFirstName = new TableColumn<>("Prénom");
+        TableColumn<Check, String> colCheckLastName = new TableColumn<>("Nom");
+        TableColumn<Check, String> colCheckDept = new TableColumn<>("Département");
+
         TableColumn<Check, LocalDate> colDate = new TableColumn<>("Date");
         TableColumn<Check, LocalTime> colTime = new TableColumn<>("Time");
         TableColumn<Check, CheckType> colType = new TableColumn<>("Type");
 
-        // 2. On configure la logique de recherche pour remplir ces 3 colonnes dynamiquement
         colCheckFirstName.setCellValueFactory(cellData -> {
-            UUID empId = cellData.getValue().getEmployeeUUID(); // On récupère l'UUID stocké dans le pointage
+            UUID empId = cellData.getValue().getEmployeeUUID();
             Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
             return new javafx.beans.property.SimpleStringProperty(emp != null ? emp.getFirstName() : "Unknown");
         });
@@ -173,27 +198,19 @@ public class PrincipalIHM extends Application {
         colCheckDept.setCellValueFactory(cellData -> {
             UUID empId = cellData.getValue().getEmployeeUUID();
             Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
-            return new javafx.beans.property.SimpleStringProperty((emp != null && emp.getDepartment() != null) ? emp.getDepartment().toString() : "None");
+
+            return new javafx.beans.property.SimpleStringProperty(
+                    (emp != null && emp.getDepartment() != null)
+                            ? emp.getDepartment().getDepartement()
+                            : "N/A"
+            );
         });
 
-        // 3. Les colonnes classiques de Check restent inchangées
         colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
         colTime.setCellValueFactory(new PropertyValueFactory<>("time"));
         colType.setCellValueFactory(new PropertyValueFactory<>("checkType"));
 
-        // 4. On ajoute toutes les colonnes dans la table
         tablePointage.getColumns().addAll(colCheckFirstName, colCheckLastName, colCheckDept, colDate, colTime, colType);
-
-        //connecte TableView sur la liste des pointages
-        //serveur reçoit pointage = l'affiche ici
-
-        ObservableList<Check> checkList =
-                FXCollections.observableArrayList(
-                        new Check(LocalDate.now(), LocalTime.of(8, 0), CheckType.IN, UUID.randomUUID()),
-                        new Check(LocalDate.now(), LocalTime.of(12, 0), CheckType.OUT, UUID.randomUUID()),
-                        new Check(LocalDate.now(), LocalTime.of(13, 0), CheckType.IN, UUID.randomUUID()),
-                        new Check(LocalDate.now(), LocalTime.of(17, 30), CheckType.OUT, UUID.randomUUID())
-                );
 
         tablePointage.setItems(gestionPointage.getListePointagesFX());
         tablePointage.setPrefHeight(500);
@@ -213,6 +230,7 @@ public class PrincipalIHM extends Application {
             Check selection = tablePointage.getSelectionModel().getSelectedItem();
             gestionPointage.supprimerPointage(selection);
         });
+
         VBox pagePointage = new VBox(10,
                 new Label("Check"),
                 checkActions,
@@ -221,45 +239,99 @@ public class PrincipalIHM extends Application {
 
         pagePointage.setPadding(new Insets(15));
 
-        /* NAV ACTIONS */
+        /* TABLE DEPARTMENT */
+
+        TableView<Department> tableDepartment = new TableView<>();
+
+        TableColumn<Department, String> colDepName = new TableColumn<>("Department");
+        colDepName.setCellValueFactory(new PropertyValueFactory<>("departement"));
+
+        tableDepartment.getColumns().add(colDepName);
+        tableDepartment.setItems(departments);
+
+        tableDepartment.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        Button btnAddDepartment = new Button("Add Department");
+        Button btnDeleteDepartment = new Button("Delete Department");
+
+        btnAddDepartment.setOnAction(e -> {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("New Department");
+            dialog.setContentText("Department name:");
+
+            dialog.showAndWait().ifPresent(name -> {
+                if (!name.trim().isEmpty()) {
+
+                    Department d = new Department(name);
+
+                    departments.add(d);
+
+                    Serialisation.saveObject(
+                            new ArrayList<>(departments),
+                            DEPARTMENT_FILE
+                    );
+                }
+            });
+        });
+
+        btnDeleteDepartment.setOnAction(e -> {
+
+            Department dep = tableDepartment.getSelectionModel().getSelectedItem();
+            if (dep == null) return;
+
+            // unlink employees
+            for (Employee emp : gestionEmployee.getEmployeeList()) {
+                if (dep.equals(emp.getDepartment())) {
+                    emp.setDepartment(null);
+                }
+            }
+
+            // remove department
+            departments.remove(dep);
+
+            // refresh tables that depend on it
+            tableEmployee.refresh();
+            tablePointage.refresh();
+
+            Serialisation.saveObject(
+                    new ArrayList<>(departments),
+                    DEPARTMENT_FILE
+            );
+        });
+
+        HBox departmentActions = new HBox(10, btnAddDepartment, btnDeleteDepartment);
+
+        VBox pageDepartment = new VBox(10,
+                new Label("Departments"),
+                departmentActions,
+                tableDepartment
+        );
+
+        pageDepartment.setPadding(new Insets(15));
+
+        /* NAV */
 
         btnEmployee.setOnAction(e -> root.setCenter(pageEmployee));
         btnPointage.setOnAction(e -> root.setCenter(pagePointage));
-
-        /* ROOT */
+        btnDepartment.setOnAction(e -> root.setCenter(pageDepartment));
 
         root.setTop(navbar);
         root.setCenter(pageEmployee);
 
-        /* FENETRE FULL SCREEN */
-
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
-        Scene scene = new Scene(
-                root,
-                screenBounds.getWidth(),
-                screenBounds.getHeight()
-        );
+        Scene scene = new Scene(root, screenBounds.getWidth(), screenBounds.getHeight());
+        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
 
-        scene.getStylesheets().add(
-                getClass().getResource("/style.css").toExternalForm()
-        );
-
-        stage.setTitle("Application");
         stage.setScene(scene);
-        stage.setX(screenBounds.getMinX());
-        stage.setY(screenBounds.getMinY());
-        stage.setWidth(screenBounds.getWidth());
-        stage.setHeight(screenBounds.getHeight());
+        stage.setTitle("Application");
         stage.show();
     }
 
     private Employee trouverEmployeeParId(ObservableList<Employee> liste, UUID id) {
         if (id == null) return null;
         for (Employee e : liste) {
-            if (id.equals(e.getEmployeeId())) { // On vérifie si l'UUID correspond
-                return e;
-            }
+            if (id.equals(e.getEmployeeId())) return e;
         }
         return null;
     }

@@ -95,10 +95,17 @@ public class GestionPointage implements Serializable {
     public synchronized void ajouterPointage(Check check) {
         historiqueGlobal.add(check);
         sauvegarderDonnees();
-        // Platform.runLater assure que la modification de l'IHM se fait sur le bon thread JavaFX
-        listePointagesFX.add(check);
-    }
 
+        // FIX : On vérifie si JavaFX est présent avant d'envoyer l'ordre de mise à jour visuelle
+        try {
+            javafx.application.Platform.runLater(() -> {
+                listePointagesFX.add(check);
+            });
+        } catch (IllegalStateException e) {
+            // Si le Toolkit n'est pas initialisé (Serveur autonome), on ignore juste la mise à jour de l'IHM
+            // car le serveur n'a pas d'interface graphique à afficher.
+        }
+    }
     public ObservableList<Check> getListePointagesFX() {
         return listePointagesFX;
     }

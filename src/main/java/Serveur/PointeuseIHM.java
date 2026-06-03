@@ -96,18 +96,34 @@ public class PointeuseIHM extends Application {
 
         ComboBox<Employee> choiceEmployer = new ComboBox<>();
 
-        Runnable refreshEmployees = () ->{
+        Runnable refreshEmployees = () -> {
             @SuppressWarnings("unchecked")
             List<Employee> listeChargee = (List<Employee>) Serialisation.loadObject("employees.ser");
             if (listeChargee != null && !listeChargee.isEmpty()) {
-                // Sauvegarder l'employé actuellement sélectionné pour ne pas perdre sa sélection au rafraîchissement
+                // 1. Sauvegarder l'employé actuellement sélectionné
                 Employee currentSelection = choiceEmployer.getValue();
 
+                // 2. Mettre à jour la liste des éléments du ComboBox
                 choiceEmployer.setItems(FXCollections.observableArrayList(listeChargee));
 
-                // Si l'employé sélectionné est toujours dans la liste, on le remet, sinon on prend le premier
-                if (currentSelection != null && listeChargee.contains(currentSelection)) {
-                    choiceEmployer.setValue(currentSelection);
+                // 3. Si aucun employé n'était sélectionné, on prend le premier par défaut
+                if (currentSelection == null) {
+                    choiceEmployer.getSelectionModel().selectFirst();
+                    return;
+                }
+
+                // 4. Parcourir la nouvelle liste pour retrouver le même employé grâce à son UUID
+                Employee equivalent = null;
+                for (Employee emp : listeChargee) {
+                    if (emp.getEmployeeId() != null && emp.getEmployeeId().equals(currentSelection.getEmployeeId())) {
+                        equivalent = emp;
+                        break;
+                    }
+                }
+
+                // 5. Si on l'a trouvé, on lui réassigne sa place, sinon on se rabat sur le premier
+                if (equivalent != null) {
+                    choiceEmployer.setValue(equivalent);
                 } else {
                     choiceEmployer.getSelectionModel().selectFirst();
                 }
