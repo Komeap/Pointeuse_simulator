@@ -32,14 +32,14 @@ public class PlanningService {
                     r.setFill((i >= debut && i < fin) ? Color.CORNFLOWERBLUE : Color.LIGHTGRAY);
                     barre.getChildren().add(r);
                 }
-                labelInfo.setText("Planning du " + jour + " pour " + emp.getFirstName() + " : " + j.getStartTime() + " - " + j.getEndTime());
+                labelInfo.setText("Schedule for " + jour + " for " + emp.getFirstName() + ": " + j.getStartTime() + " - " + j.getEndTime());
             } else {
                 barre.getChildren().clear();
-                labelInfo.setText("Aucune heure de travail définie ce jour pour " + emp.getFirstName());
+                labelInfo.setText("No working hours defined for this day for " + emp.getFirstName());
             }
         } else {
             barre.getChildren().clear();
-            labelInfo.setText("Aucun planning disponible pour cet employé.");
+            labelInfo.setText("No schedule available for this employee.");
         }
     }
 }
