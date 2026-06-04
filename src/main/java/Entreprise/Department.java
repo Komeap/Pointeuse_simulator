@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Department implements Serializable{
+
+	//- - - ATTRIBUTES - - -
 	private static final long serialVersionUID = 1L;
 	private String depName; //name of departement
 
@@ -19,7 +21,6 @@ public class Department implements Serializable{
 		this.employeeList = new ArrayList<>();
 	}
 
-	//- - - ATTRIBUTE - - -
 		//attribute depName
 	public String getDepartement(){ return this.depName;} //allows access to the depName value
 

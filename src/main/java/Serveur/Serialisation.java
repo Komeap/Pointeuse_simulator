@@ -13,8 +13,8 @@ public class Serialisation implements Serializable {
             oss.writeObject(obj);
             System.out.println("Objet sauvegardé");
         }
-        catch (IOException e) {
-            e.printStackTrace();
+        catch (IOException error) {
+            error.printStackTrace();
         }
     }
 
@@ -24,8 +24,8 @@ public class Serialisation implements Serializable {
         {
             return oos.readObject();
         }
-        catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+        catch (IOException | ClassNotFoundException error) {
+            error.printStackTrace();
             return null;
         }
     }

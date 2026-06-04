@@ -209,7 +209,7 @@ public class PrincipalIHM extends Application {
 
         tablePointage.getColumns().addAll(colCheckFirstName, colCheckLastName, colCheckDept, colDate, colTime, colType);
 
-        tablePointage.setItems(gestionPointage.getListePointagesFX());
+        tablePointage.setItems(gestionPointage.getClockingList());
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -220,12 +220,12 @@ public class PrincipalIHM extends Application {
 
         btnEditCheck.setOnAction(e -> {
             Check selection = tablePointage.getSelectionModel().getSelectedItem();
-            gestionPointage.modifierPointage(selection);
+            gestionPointage.editClocking(selection);
         });
 
         btnDeleteCheck.setOnAction(e -> {
             Check selection = tablePointage.getSelectionModel().getSelectedItem();
-            gestionPointage.supprimerPointage(selection);
+            gestionPointage.deleteClocking(selection);
         });
 
         VBox pagePointage = new VBox(10,

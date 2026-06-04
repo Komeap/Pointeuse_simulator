@@ -37,13 +37,13 @@ public class Server {
 
                         Message msg = (Message) ois.readObject();
 
-                        Check nouveauCheck = gestionPointage.creerPointageAutomatique(
+                        Check nouveauCheck = gestionPointage.createAutomaticClocking(
                                 msg.getIdEmp(),
                                 msg.getDate().toLocalDate(),
                                 msg.getDate().toLocalTime()
                         );
 
-                        gestionPointage.ajouterPointage(nouveauCheck);
+                        gestionPointage.addClocking(nouveauCheck);
 
                         System.out.println("Pointage reçu : " + msg.getIdEmp());
 
@@ -52,9 +52,9 @@ public class Server {
                     }
                 }
 
-            } catch (Exception e) {
-                System.out.println("Erreur serveur : " + e.getMessage());
-                e.printStackTrace();
+            } catch (Exception error) {
+                System.out.println("server error : " + error.getMessage());
+                error.printStackTrace();
             }
         });
 

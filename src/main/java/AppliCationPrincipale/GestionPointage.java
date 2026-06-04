@@ -14,179 +14,224 @@ import java.util.UUID;
 
 public class GestionPointage implements Serializable {
 
+    //- - - ATTRIBUTES - - -
+    //variable for the file name for serialized clocking
+    //'static' because it's unique and 'final' for that no one modify it
     private static final String fileName = "pointages.ser";
 
-    // La liste observable que la TableView va écouter
-    private final transient ObservableList<Check> listePointagesFX = FXCollections.observableArrayList();
+    //list who contains clocking, 'ObservableList' allows the list to be dynamic with the interface
+    //'transient' because 'ObservableList' it's not serializable (he contains JavaFx code)
+    //'final' for that no one modify it
+    private final transient ObservableList<Check> clockingList = FXCollections.observableArrayList();
 
-    // La liste standard utilisée uniquement pour la sérialisation (car ObservableList n'est pas sérialisable)
-    private final List<Check> historiqueGlobal = new ArrayList<>();
+    //'clockingList' isn't serializable so 'globalHistory' is the list of clocking for the serialisartion (use for the save and the read)
+    //'final' for that no one modify it
+    private final List<Check> globalHistory = new ArrayList<>();
 
-    public GestionPointage() {
-        @SuppressWarnings("unchecked")
-        List<Check> historiqueCharge = (List<Check>) Serialisation.loadObject(fileName);
+    //- - - CONSTRUCTOR - - -
+    public GestionPointage()
+    {
+        //@SuppressWarnings("unchecked")
+        //We read the clocking file with the Serialisation class, then we cast it so that it is a list of check
+        List<Check> loadHistory = (List<Check>) Serialisation.loadObject(fileName);
 
-        if (historiqueCharge != null && !historiqueCharge.isEmpty()) {
-            this.historiqueGlobal.addAll(historiqueCharge);
-            this.listePointagesFX.addAll(historiqueCharge);
-            System.out.println("Historique des pointages restauré : " + historiqueGlobal.size() + " éléments.");
+        //We check the list of check
+        if (loadHistory != null && !loadHistory.isEmpty()) {
+            //we add all the check in the both lists
+            this.globalHistory.addAll(loadHistory);
+            this.clockingList.addAll(loadHistory);
+            System.out.println("Clocking history restored : " + globalHistory.size() + " elements.");
         } else {
-            System.out.println("Aucun historique de pointage trouvé. Création d'un nouveau fichier.");
+            System.out.println("No clocking history found => Creation of a new file");
         }
     }
 
+    //- - - GETTER - - -
     /**
-     * Construit un Check avec le bon CheckType calculé automatiquement.
-     * À appeler depuis le Serveur au lieu de créer le Check manuellement.
+     * we return the clocking list
      */
-    public Check creerPointageAutomatique(UUID employeeId, LocalDate date, LocalTime time) {
-        CheckType typeCalcule = determinerProchainType(employeeId, date);
-        return new Check(date, time, typeCalcule, employeeId);
+    public ObservableList<Check> getClockingList() { return clockingList; }
+
+    /**
+     * we return the global history
+     */
+    public List<Check> getGlobalHistory() { return globalHistory; }
+
+    //- - - METHODS - - -
+    /**
+     * Builds a Check with the correct CheckType calculated automatically.
+     */
+    public Check createAutomaticClocking(UUID employeeId, LocalDate date, LocalTime time)
+    {
+        CheckType nextType = determineNextType(employeeId, date);
+        return new Check(date, time, nextType, employeeId); //we return a new check
     }
 
     /**
      * Détermine  IN ou OUT.
      */
-    private CheckType determinerProchainType(UUID employeeId, LocalDate dateDuNouveauPointage) {
-        Check dernierPointage = getLastCheckForEmployee(employeeId);
+    private CheckType determineNextType(UUID employeeId, LocalDate dateDuNouveauPointage)
+    {
+        Check lastClocking = getLastCheckForEmployee(employeeId);
 
-        //Si aucun pointage précédent, c'est IN
-        if (dernierPointage == null) {
+        //if no previous clocking, it's IN
+        if (lastClocking == null) {
             return CheckType.IN;
         }
 
-        LocalDate dateDernierPointage = dernierPointage.getDate();
-        CheckType typeDernierPointage = dernierPointage.getCheckType();
+        LocalDate dateLastClocking = lastClocking.getDate();
+        CheckType typeLastClocking = lastClocking.getCheckType();
 
-        // On est sur un jour différent (le lendemain ou plus tard)
-        if (dateDuNouveauPointage.isAfter(dateDernierPointage)) {
-            // Si le dernier pointage de la veille était un IN, il y a eu un oubli
-            if (typeDernierPointage == CheckType.IN) {
-                System.out.println("ALERTE : Oubli de pointage OUT détecté pour l'employé " + employeeId + " le " + dateDernierPointage);
+        //two cases :
+        //it's today, we change the type
+        if (dateDuNouveauPointage.isEqual(dateLastClocking))
+        {
+            //if the last clocking is OUT, then it's IN
+            //else it's OUT
+            return (typeLastClocking == CheckType.IN) ? CheckType.OUT : CheckType.IN;
+        }
+
+        //it's the next day
+        if (dateDuNouveauPointage.isAfter(dateLastClocking))
+        {
+
+            //If the last clocking from the previous day was IN, then there is a oversight
+            if (typeLastClocking == CheckType.IN)
+            {
+                System.out.println("Attention : oversight of clocking OUT undetected for the employee " + employeeId + " the " + dateLastClocking);
             }
-            // Dans tous les cas le premier pointage d'une nouvelle journée est un IN
+            //In any case, the first time on a new day is an IN.
             return CheckType.IN;
         }
 
-        // On est le même jour, on change le type
-        if (dateDuNouveauPointage.isEqual(dateDernierPointage)) {
-            return (typeDernierPointage == CheckType.IN) ? CheckType.OUT : CheckType.IN;
-        }
-
-        // Sécurité par défaut, pour gerer les eventuel probleme de date
+        //default security
         return CheckType.IN;
     }
 
     /**
-     * Récupère le tout dernier pointage enregistré pour un employé spécifique.
+     * return the most recent clocking record for a given employee.
      */
     private Check getLastCheckForEmployee(UUID employeeId) {
-        // On parcourt la liste à l'envers pour trouver le plus récent
-        for (int i = historiqueGlobal.size() - 1; i >= 0; i--) {
-            Check c = historiqueGlobal.get(i);
-            if (c.getEmployeeUUID().equals(employeeId)) {
-                return c;
+        //we go through the list upside down to find the most recent one.
+        for (int i = globalHistory.size() - 1; i >= 0; i--)
+        {
+            Check check = globalHistory.get(i); //we recup the check at the position i
+            if (check.getEmployeeUUID().equals(employeeId)) //if the employee id in the check is the same as the one in the parameter
+            {
+                return check; //we return the check
             }
         }
-        return null;
+        return null; //else we return null because there is no one who matches
     }
 
-    // Ajouter un pointage et mettre à jour la vue en même temps
-    public synchronized void ajouterPointage(Check check) {
-        historiqueGlobal.add(check);
-        sauvegarderDonnees();
+    /**
+     * add a cloking in the both lists of check and we update the display of the main IHM
+     */
+    public synchronized void addClocking(Check check)
+    {
+        globalHistory.add(check); //we add the check in the global history
+        saveData(); //we save the check in the clocking file with the serialisation
 
-        // FIX : On vérifie si JavaFX est présent avant d'envoyer l'ordre de mise à jour visuelle
-        try {
+        //we try to see if JavaFx is launched to add the check
+        try
+        {
             javafx.application.Platform.runLater(() -> {
-                listePointagesFX.add(check);
+                clockingList.add(check);
             });
-        } catch (IllegalStateException e) {
-            // Si le Toolkit n'est pas initialisé (Serveur autonome), on ignore juste la mise à jour de l'IHM
-            // car le serveur n'a pas d'interface graphique à afficher.
+        } catch (IllegalStateException error) {
+            //if JavaFx is not launched, we ignore
         }
     }
-    public ObservableList<Check> getListePointagesFX() {
-        return listePointagesFX;
-    }
 
-    public List<Check> getHistoriqueGlobal() {
-        return historiqueGlobal;
-    }
-
-    private void sauvegarderDonnees()
+    /**
+     * we save the data in the clocking file
+     */
+    private void saveData()
     {
-        Serialisation.saveObject(new ArrayList<>(historiqueGlobal), fileName);
+        Serialisation.saveObject(new ArrayList<>(globalHistory), fileName);
     }
 
-    /*
-    // Restaurer les données après désérialisation
-    public void restaurerHistorique(List<Check> charge) {
-        if (charge != null) {
-            historiqueGlobal.addAll(charge);
-            listePointagesFX.addAll(charge);
-        }
-    } */
-
-    public void supprimerPointage(Check selectedCheck)
+    /**
+     * we delete a clocking both lists
+     */
+    public void deleteClocking(Check check)
     {
-        if (selectedCheck == null) {
-            afficherAlerteSelection();
-            return;
-        }
-        historiqueGlobal.remove(selectedCheck);
-        javafx.application.Platform.runLater(() -> listePointagesFX.remove(selectedCheck));
-        sauvegarderDonnees();
-    }
-
-    public void modifierPointage(Check selectedCheck) {
-        if (selectedCheck == null) {
-            afficherAlerteSelection();
+        //We check that 'selectedCheck' isn't null
+        if (check == null)
+        {
+            displaySelectionAlert();
             return;
         }
 
+        globalHistory.remove(check); //we delete 'check' in global history
+        //if JavaFx is launched, we delete 'check' in clocking list
+        javafx.application.Platform.runLater(() -> {
+            clockingList.remove(check);
+        });
+
+        saveData(); //we save the delete in clocking file
+    }
+
+    /**
+     * we allow to modify the clocking in both lists
+     */
+    public void editClocking(Check editCheck)
+    {
+        //we check the parameter 'editCheck' isn't null
+        if (editCheck == null)
+        {
+            displaySelectionAlert();
+            return;
+        }
+
+        //We open a small graphic window that allows us to see the different types of checks (here IN or OUT)
         javafx.scene.control.ChoiceDialog<CheckType> dialog = new javafx.scene.control.ChoiceDialog<>(
-                selectedCheck.getCheckType(),
+                editCheck.getCheckType(),
                 java.util.Arrays.asList(CheckType.values())
         );
 
         dialog.setTitle("Modifier un pointage");
         dialog.setContentText("Choisir le nouveau type :");
 
+        //we wait that the user choose and valid his choice
         java.util.Optional<CheckType> result = dialog.showAndWait();
 
+        //the choice of user is stocked in newType
         result.ifPresent(newType -> {
-            // FIX : On récupère les index D'ABORD, tant que l'objet correspond parfaitement à ce qu'il y a dans les listes
-            int indexGlobal = historiqueGlobal.indexOf(selectedCheck);
-            int indexFX = listePointagesFX.indexOf(selectedCheck);
+            //we look for the position ot the parameter in the both lists
+            int indexHistory = globalHistory.indexOf(editCheck);
+            int indexClocking = clockingList.indexOf(editCheck);
 
-            // Maintenant, on peut modifier l'objet métier en toute sécurité
-            selectedCheck.setCheckType(newType);
+            //Now, we edit the type of the parameter with the setter of the CheckType class
+            editCheck.setCheckType(newType);
 
-            // Mise à jour de la liste de sauvegarde
-            if (indexGlobal != -1) {
-                historiqueGlobal.set(indexGlobal, selectedCheck);
+            //update of the global history
+            if (indexHistory != -1)
+            {
+                globalHistory.set(indexHistory, editCheck);
             }
 
-            // Mise à jour visuelle garantie sur le thread JavaFX
-            if (indexFX != -1) {
+            //update the display and the clocking list
+            if (indexClocking != -1)
+            {
                 javafx.application.Platform.runLater(() -> {
-                    listePointagesFX.set(indexFX, selectedCheck);
+                    clockingList.set(indexClocking, editCheck);
                 });
             }
 
-            sauvegarderDonnees();
+            saveData(); //we save the data bacause we change the type of the parameter
         });
     }
 
-    private void afficherAlerteSelection()
+    private void displaySelectionAlert()
     {
-        // Platform.runLater garantit que la pop-up s'ouvre sur le thread principal de l'IHM
+        //Platform.runLater ensures that the pop-up opens on the main IHM
+        //we manage the various possible errors
         javafx.application.Platform.runLater(() -> {
             javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
-            alert.setTitle("Sélection requise");
+            alert.setTitle("Selection Required");
             alert.setHeaderText(null);
-            alert.setContentText("Veuillez sélectionner un pointage dans le tableau avant d'effectuer cette action.");
+            alert.setContentText("Select a clocking in the table !");
             alert.showAndWait();
         });
     }
