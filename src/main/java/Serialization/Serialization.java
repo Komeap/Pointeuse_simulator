@@ -3,11 +3,11 @@
   * It allows, for example, to save the company’s clocking or employees.
  */
 
-package Serveur;
+package Serialization;
 
 import java.io.*;
 
-public class Serialisation implements Serializable {
+public class Serialization implements Serializable {
 
     // - - - METHODS - - -
 
@@ -16,8 +16,8 @@ public class Serialisation implements Serializable {
      */
     public static void saveObject(Object obj, String fileName)
     {
-        try(FileOutputStream fos = new FileOutputStream(fileName); //we open or create the file
-            ObjectOutputStream oss = new ObjectOutputStream(fos)) //we translate the object in binary
+        try(FileOutputStream fis = new FileOutputStream(fileName); //we open or create the file
+            ObjectOutputStream oss = new ObjectOutputStream(fis)) //we translate the object in binary
         {
             oss.writeObject(obj); //we write the informations of the object in the file
             System.out.println("Objet sauvegardé");

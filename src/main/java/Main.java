@@ -1,7 +1,7 @@
-import Serveur.PointeuseIHM;
+import TimeClock.TimeClockMMI;
 
 public class Main {
     public static void main(String[] args) {
-        PointeuseIHM.main(args);
+        TimeClockMMI.main(args);
     }
 }

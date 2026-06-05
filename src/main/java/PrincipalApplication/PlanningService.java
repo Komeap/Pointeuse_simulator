@@ -1,4 +1,4 @@
-package AppliCationPrincipale;
+package PrincipalApplication;
 
 import Employee.Employee;
 import Planning.WorkDay;

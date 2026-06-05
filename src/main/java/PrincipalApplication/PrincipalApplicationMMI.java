@@ -1,11 +1,11 @@
-package AppliCationPrincipale;
+package PrincipalApplication;
 
 import Check.Check;
 import Check.CheckType;
 import Employee.Employee;
 import Entreprise.Department;
 import Serveur.Server;
-import Serveur.Serialisation;
+import Serialization.Serialization;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class PrincipalIHM extends Application {
+public class PrincipalApplicationMMI extends Application {
 
     private static final String DEPARTMENT_FILE = "departments.ser";
 
@@ -35,7 +35,7 @@ public class PrincipalIHM extends Application {
         BorderPane root = new BorderPane();
 
         /* BACKEND */
-        GestionPointage gestionPointage = new GestionPointage();
+        ClockingManager clockingManager = new ClockingManager();
 
         List<Department> departmentsInitiaux = new ArrayList<>();
         departmentsInitiaux.add(new Department("Human Resources"));
@@ -45,7 +45,7 @@ public class PrincipalIHM extends Application {
         ObservableList<Department> departments = FXCollections.observableArrayList();
 
         @SuppressWarnings("unchecked")
-        List<Department> loaded = (List<Department>) Serialisation.loadObject(DEPARTMENT_FILE);
+        List<Department> loaded = (List<Department>) Serialization.loadObject(DEPARTMENT_FILE);
 
         if (loaded != null) {
             departments.addAll(loaded);
@@ -54,9 +54,9 @@ public class PrincipalIHM extends Application {
             departments.addAll(departmentsInitiaux);
         }
 
-        GestionEmployee gestionEmployee = new GestionEmployee(departments);
+        EmployeeManager gestionEmployee = new EmployeeManager(departments);
 
-        Server monServeur = new Server(gestionPointage);
+        Server monServeur = new Server(clockingManager);
         monServeur.demarrer();
 
         /* NAVBAR */
@@ -103,16 +103,16 @@ public class PrincipalIHM extends Application {
 
         HBox employeeActions = new HBox(10, btnAddEmployee, btnEditEmployee, btnDeleteEmployee);
 
-        btnAddEmployee.setOnAction(e -> gestionEmployee.ajouterEmployee());
+        btnAddEmployee.setOnAction(e -> gestionEmployee.addEmployee());
 
         btnEditEmployee.setOnAction(e -> {
             Employee selection = tableEmployee.getSelectionModel().getSelectedItem();
-            gestionEmployee.modifierEmployee(selection);
+            gestionEmployee.modifyEmployee(selection);
         });
 
         btnDeleteEmployee.setOnAction(e -> {
             Employee selection = tableEmployee.getSelectionModel().getSelectedItem();
-            gestionEmployee.supprimerEmployee(selection);
+            gestionEmployee.deleteEmployee(selection);
         });
 
         PlanningService planningService = new PlanningService();
@@ -209,7 +209,7 @@ public class PrincipalIHM extends Application {
 
         tablePointage.getColumns().addAll(colCheckFirstName, colCheckLastName, colCheckDept, colDate, colTime, colType);
 
-        tablePointage.setItems(gestionPointage.getClockingList());
+        tablePointage.setItems(clockingManager.getClockingList());
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -220,12 +220,12 @@ public class PrincipalIHM extends Application {
 
         btnEditCheck.setOnAction(e -> {
             Check selection = tablePointage.getSelectionModel().getSelectedItem();
-            gestionPointage.editClocking(selection);
+            clockingManager.editClocking(selection);
         });
 
         btnDeleteCheck.setOnAction(e -> {
             Check selection = tablePointage.getSelectionModel().getSelectedItem();
-            gestionPointage.deleteClocking(selection);
+            clockingManager.deleteClocking(selection);
         });
 
         VBox pagePointage = new VBox(10,
@@ -260,7 +260,7 @@ public class PrincipalIHM extends Application {
                 if (!name.trim().isEmpty()) {
                     Department d = new Department(name);
                     departments.add(d);
-                    Serialisation.saveObject(new ArrayList<>(departments), DEPARTMENT_FILE);
+                    Serialization.saveObject(new ArrayList<>(departments), DEPARTMENT_FILE);
                 }
             });
         });
@@ -283,7 +283,7 @@ public class PrincipalIHM extends Application {
             tableEmployee.refresh();
             tablePointage.refresh();
 
-            Serialisation.saveObject(new ArrayList<>(departments), DEPARTMENT_FILE);
+            Serialization.saveObject(new ArrayList<>(departments), DEPARTMENT_FILE);
         });
 
         HBox departmentActions = new HBox(10, btnAddDepartment, btnDeleteDepartment);

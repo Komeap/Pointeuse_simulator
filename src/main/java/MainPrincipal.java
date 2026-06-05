@@ -1,7 +1,7 @@
-import AppliCationPrincipale.PrincipalIHM;
+import PrincipalApplication.PrincipalApplicationMMI;
 
 public class MainPrincipal {
     public static void main(String[] args) {
-        PrincipalIHM.main(args);
+        PrincipalApplicationMMI.main(args);
     }
 }

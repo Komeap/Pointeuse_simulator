@@ -2,7 +2,6 @@
   <configuration default="false" name="LANCEMENT TOTAL" type="CompoundRunConfigurationType">
     <toRun name="Pointeuse" type="Application" />
     <toRun name="Principale" type="Application" />
-    <toRun name="Serveur" type="Application" />
     <method v="2" />
   </configuration>
 </component>

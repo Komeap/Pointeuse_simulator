@@ -1,7 +1,9 @@
-package Serveur;
+package TimeClock;
 
 import Check.CheckType;
 import Employee.Employee;
+import Serveur.Message;
+import Serialization.Serialization;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -33,7 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class PointeuseIHM extends Application {
+public class TimeClockMMI extends Application {
 
     private static List<Message> bufferPointages = Collections.synchronizedList(new ArrayList<>());
     private static String serverIp = "localhost";
@@ -63,7 +65,7 @@ public class PointeuseIHM extends Application {
     // Bloc statique pour charger la sauvegarde au lancement de la classe
     static {
         @SuppressWarnings("unchecked")
-        List<Message> charge = (List<Message>) Serialisation.loadObject("buffer_pointeuse.ser");
+        List<Message> charge = (List<Message>) Serialization.loadObject("buffer_pointeuse.ser");
         if (charge != null) {
             bufferPointages.addAll(charge);
             System.out.println("Pointages restaurés : " + bufferPointages.size());
@@ -98,7 +100,7 @@ public class PointeuseIHM extends Application {
 
         Runnable refreshEmployees = () -> {
             @SuppressWarnings("unchecked")
-            List<Employee> listeChargee = (List<Employee>) Serialisation.loadObject("employees.ser");
+            List<Employee> listeChargee = (List<Employee>) Serialization.loadObject("employees.ser");
             if (listeChargee != null && !listeChargee.isEmpty()) {
                 // 1. Sauvegarder l'employé actuellement sélectionné
                 Employee currentSelection = choiceEmployer.getValue();
@@ -264,7 +266,7 @@ public class PointeuseIHM extends Application {
 
         // 2. Sauvegarder automatiquement à la fermeture de la fenêtre
         primaryStage.setOnCloseRequest(e -> {
-            Serialisation.saveObject(new ArrayList<>(bufferPointages), "buffer_pointeuse.ser");
+            Serialization.saveObject(new ArrayList<>(bufferPointages), "buffer_pointeuse.ser");
             System.out.println("Buffer sauvegardé avant fermeture.");
             Platform.exit(); // Arrête proprement JavaFX
             System.exit(0);  // Arrête le processus entier (dont le Thread d'envoi)
@@ -321,6 +323,6 @@ public class PointeuseIHM extends Application {
     }
 
     public static void setBufferPointages(List<Message> bufferPointages) {
-        PointeuseIHM.bufferPointages = bufferPointages;
+        TimeClockMMI.bufferPointages = bufferPointages;
     }
 }

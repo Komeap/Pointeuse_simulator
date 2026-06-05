@@ -3,11 +3,11 @@
  * as well as save it in a file .ser.
  */
 
-package AppliCationPrincipale;
+package PrincipalApplication;
 
 import Check.Check;
 import Check.CheckType;
-import Serveur.Serialisation;
+import Serialization.Serialization;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.io.Serializable;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class GestionPointage implements Serializable {
+public class ClockingManager implements Serializable {
 
     //- - - ATTRIBUTES - - -
     //variable for the file name for serialized clocking
@@ -34,11 +34,11 @@ public class GestionPointage implements Serializable {
     private final List<Check> globalHistory = new ArrayList<>();
 
     //- - - CONSTRUCTOR - - -
-    public GestionPointage()
+    public ClockingManager()
     {
         //@SuppressWarnings("unchecked")
         //We read the clocking file with the Serialisation class, then we cast it so that it is a list of check
-        List<Check> loadHistory = (List<Check>) Serialisation.loadObject(fileName);
+        List<Check> loadHistory = (List<Check>) Serialization.loadObject(fileName);
 
         //We check the list of check
         if (loadHistory != null && !loadHistory.isEmpty()) {
@@ -153,7 +153,7 @@ public class GestionPointage implements Serializable {
      */
     private void saveData()
     {
-        Serialisation.saveObject(new ArrayList<>(globalHistory), fileName);
+        Serialization.saveObject(new ArrayList<>(globalHistory), fileName);
     }
 
     /**

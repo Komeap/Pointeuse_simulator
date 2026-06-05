@@ -7,20 +7,18 @@
 package Serveur;
 
 import Check.Check;
-import AppliCationPrincipale.GestionPointage;
-import javafx.application.Platform;
+import PrincipalApplication.ClockingManager;
 
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 
 public class Server {
 
     //- - - ATTRIBUTES - - -
     //variable who allows to manage the clocking
     //'final' for that no one modify it
-    private final GestionPointage clockingManager;
+    private final ClockingManager clockingManager;
 
     //variable server port
     //'static' because the server port it's unique and 'final' for that no one modify it
@@ -31,7 +29,7 @@ public class Server {
     private static ServerSocket serverSocket;
 
     //- - - CONSTRUCTOR - - -
-    public Server(GestionPointage clockingManager) {
+    public Server(ClockingManager clockingManager) {
         this.clockingManager = clockingManager;
     }
 

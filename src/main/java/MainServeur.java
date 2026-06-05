@@ -1,13 +1,13 @@
 import Serveur.Server;
-import AppliCationPrincipale.GestionPointage;
+import PrincipalApplication.ClockingManager;
 
 public class MainServeur {
     public static void main(String[] args) throws Exception {
         // 1. On crée le gestionnaire de données indispensables au serveur
-        GestionPointage gestionPointage = new GestionPointage();
+        ClockingManager clockingManager = new ClockingManager();
 
         // 2. On instancie le serveur en lui transmettant le gestionnaire
-        Server monServeur = new Server(gestionPointage);
+        Server monServeur = new Server(clockingManager);
 
         // 3. On lance le serveur (il s'exécute alors en tâche de fond)
         monServeur.demarrer();
