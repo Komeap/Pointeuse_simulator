@@ -1,3 +1,8 @@
+/**
+ * The 'ClockingManager' class allows you to manipulate a pointer to display it live,
+ * as well as save it in a file .ser.
+ */
+
 package AppliCationPrincipale;
 
 import Check.Check;
