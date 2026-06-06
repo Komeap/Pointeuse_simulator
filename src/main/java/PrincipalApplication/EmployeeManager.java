@@ -24,16 +24,25 @@ import java.util.Optional;
 
 public class EmployeeManager {
 
-    //list of employees used for JavaFX display (ObservableList for UI updates)
+    // - - - ATTRIBUTES - - -
+    /** list of employees used for JavaFX display (ObservableList for UI updates) */
     private ObservableList<Employee> employeeList;
 
-    //list of departments used for selection in UI
+    /** List of departments used for selection in UI */
     private ObservableList<Department> departmentList;
 
-    //file used for serialization (save/load employees)
+    /**
+     * file used for serialization (save/load employees)
+     * 'final' for that no one modify it
+     */
     private static final String fileName = "employees.ser";
 
-    //constructor initializes employee list and loads saved data if available
+    //- - - CONSTRUCTOR - - -
+
+    /**
+     * Constructor initializes employee list and loads saved data if available
+     * @param departments : List<Department>
+     */
     public EmployeeManager(List<Department> departments) {
         this.employeeList = FXCollections.observableArrayList();
         this.departmentList = FXCollections.observableArrayList(departments);
@@ -49,12 +58,19 @@ public class EmployeeManager {
         }
     }
 
-    //returns observable list for UI binding
+    // - - - GETTER - - -
+    /**
+     * returns observable list for UI binding
+     * @return employeeList
+     */
     public ObservableList<Employee> getEmployeeList() {
         return employeeList;
     }
 
-    //opens a dialog to create a new employee with schedule configuration
+    // - - - METHODS - - -
+    /**
+     * opens a dialog to create a new employee with schedule configuration
+     */
     public void addEmployee() {
 
         Dialog<Employee> dialog = new Dialog<>();
@@ -179,7 +195,10 @@ public class EmployeeManager {
         });
     }
 
-    //opens a dialog to modify an existing employee
+    /**
+     * opens a dialog to modify an existing employee
+     * @param selectedEmployee : Employee (Employee class)
+     */
     public void modifyEmployee(Employee selectedEmployee) {
 
         //safety check
@@ -316,7 +335,10 @@ public class EmployeeManager {
         });
     }
 
-    //delete employee and clean department link
+    /**
+     * delete employee and clean department link
+     * @param selectedEmployee : Employee (Employee class)
+     */
     public void deleteEmployee(Employee selectedEmployee) {
 
         if (selectedEmployee == null) {
@@ -334,7 +356,9 @@ public class EmployeeManager {
         saveData();
     }
 
-    //save employee list to file
+    /**
+     * save employee list to file
+     */
     private void saveData() {
         Serialization.saveObject(
                 new ArrayList<>(employeeList),
@@ -342,35 +366,42 @@ public class EmployeeManager {
         );
     }
 
-    //generate random weekly planning for default values
+    /**
+     * generate random weekly planning for default values
+     * @return planning
+     */
     private Planning.Planning randomPlanningGenerator() {
 
-        Planning.Planning p = new Planning.Planning();
+        Planning.Planning planning = new Planning.Planning();
 
-        List<DayOfWeek> days =
-                new ArrayList<>(List.of(DayOfWeek.values()));
+        List<DayOfWeek> days = new ArrayList<>(List.of(DayOfWeek.values()));
 
         Collections.shuffle(days);
 
-        for (int i = 0; i < 5; i++) {
+        for (int loop = 0; loop < 5; loop++) {
 
             int startHour = 8 + (int) (Math.random() * 3);
             LocalTime start = LocalTime.of(startHour, 0);
             LocalTime end = start.plusHours(7);
 
-            p.setWorkDay(days.get(i),
+            planning.setWorkDay(days.get(loop),
                     new Planning.WorkDay(start, end));
         }
 
-        return p;
+        return planning;
     }
 
-    //creates schedule UI panel for each day of week
-    private VBox createSchedulePanel(CheckBox[] cbDays,
-                                     ComboBox<LocalTime>[] cbStart,
-                                     ComboBox<LocalTime>[] cbEnd,
-                                     Label lblTotal,
-                                     Planning.Planning basePlanning) {
+    /**
+     * creates schedule UI panel for each day of week
+     * @param cbDays : CheckBox[]
+     * @param cbStart : ComboBox<LocalTime>[]
+     * @param cbEnd : ComboBox<LocalTime>[]
+     * @param label : Label
+     * @param basePlanning : Planning.Planning
+     * @return ...
+     */
+    private VBox createSchedulePanel(CheckBox[] cbDays, ComboBox<LocalTime>[] cbStart, ComboBox<LocalTime>[] cbEnd, Label label, Planning.Planning basePlanning)
+    {
 
         VBox vbox = new VBox(10);
         vbox.getChildren().add(
@@ -443,15 +474,15 @@ public class EmployeeManager {
                 if (checked && cbEnd[index].getValue() == null)
                     cbEnd[index].setValue(LocalTime.of(17, 0));
 
-                calculateHourTotal(cbDays, cbStart, cbEnd, lblTotal);
+                calculateHourTotal(cbDays, cbStart, cbEnd, label);
             });
 
             cbStart[i].setOnAction(
-                    e -> calculateHourTotal(cbDays, cbStart, cbEnd, lblTotal)
+                    e -> calculateHourTotal(cbDays, cbStart, cbEnd, label)
             );
 
             cbEnd[i].setOnAction(
-                    e -> calculateHourTotal(cbDays, cbStart, cbEnd, lblTotal)
+                    e -> calculateHourTotal(cbDays, cbStart, cbEnd, label)
             );
 
             grid.add(cbDays[i], 0, i);
@@ -460,17 +491,20 @@ public class EmployeeManager {
             grid.add(cbEnd[i], 3, i);
         }
 
-        calculateHourTotal(cbDays, cbStart, cbEnd, lblTotal);
+        calculateHourTotal(cbDays, cbStart, cbEnd, label);
 
-        vbox.getChildren().addAll(grid, lblTotal);
+        vbox.getChildren().addAll(grid, label);
         return vbox;
     }
 
-    //calculate total weekly working hours
-    private void calculateHourTotal(CheckBox[] cbDays,
-                                    ComboBox<LocalTime>[] cbStart,
-                                    ComboBox<LocalTime>[] cbEnd,
-                                    Label lblTotal) {
+    /**
+     * calculate total weekly working hours
+     * @param cbDays : CheckBox[]
+     * @param cbStart : ComboBox<LocalTime>[]
+     * @param cbEnd : ComboBox<LocalTime>[]
+     * @param label : Label label
+     */
+    private void calculateHourTotal(CheckBox[] cbDays, ComboBox<LocalTime>[] cbStart, ComboBox<LocalTime>[] cbEnd, Label label) {
 
         int totalMinutes = 0;
 
@@ -502,19 +536,19 @@ public class EmployeeManager {
         int hours = totalMinutes / 60;
         int minutes = totalMinutes % 60;
 
-        lblTotal.setText(
-                String.format("Total scheduled: %dh%02d", hours, minutes)
-        );
+        label.setText(String.format("Total scheduled: %dh%02d", hours, minutes));
 
-        lblTotal.setStyle(
-                "-fx-text-fill: #2c3e50; -fx-font-weight: bold;"
-        );
+        label.setStyle("-fx-text-fill: #2c3e50; -fx-font-weight: bold;");
     }
 
-    //validate that schedule inputs are correct
-    private boolean validateSchedules(CheckBox[] cbDays,
-                                      ComboBox<LocalTime>[] cbStart,
-                                      ComboBox<LocalTime>[] cbEnd) {
+    /**
+     * validate that schedule inputs are correct
+     * @param cbDays : CheckBox[]
+     * @param cbStart : ComboBox<LocalTime>[]
+     * @param cbEnd : ComboBox<LocalTime>[]
+     * @return booleen : true or false
+     */
+    private boolean validateSchedules(CheckBox[] cbDays, ComboBox<LocalTime>[] cbStart, ComboBox<LocalTime>[] cbEnd) {
 
         for (int i = 0; i < 7; i++) {
 
@@ -552,7 +586,11 @@ public class EmployeeManager {
         return true;
     }
 
-    //show error alert popup
+    /**
+     * show error alert popup
+     * @param title : String
+     * @param message : String
+     */
     private void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
@@ -561,7 +599,11 @@ public class EmployeeManager {
         alert.showAndWait();
     }
 
-    //capitalize first letter of a string (used for days display)
+    /**
+     * capitalize first letter of a string (used for days display)
+     * @param text : String
+     * @return ...
+     */
     private String capitalize(String text) {
         if (text == null || text.isEmpty()) return text;
         return text.substring(0, 1).toUpperCase()

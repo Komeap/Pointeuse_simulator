@@ -20,23 +20,31 @@ import java.util.UUID;
 public class ClockingManager implements Serializable {
 
     //- - - ATTRIBUTES - - -
-    //variable for the file name for serialized clocking
-    //'static' because it's unique and 'final' for that no one modify it
+    /**
+     * variable for the file name for serialized clocking
+     * 'static' because it's unique and 'final' for that no one modify it
+     */
     private static final String fileName = "pointages.ser";
 
-    //list who contains clocking, 'ObservableList' allows the list to be dynamic with the interface
-    //'transient' because 'ObservableList' it's not serializable (he contains JavaFx code)
-    //'final' for that no one modify it
+    /**
+     * list who contains clocking, 'ObservableList' allows the list to be dynamic with the interface
+     * 'transient' because 'ObservableList' it's not serializable (he contains JavaFx code)
+     * 'final' for that no one modify it
+     */
     private final transient ObservableList<Check> clockingList = FXCollections.observableArrayList();
 
-    //'clockingList' isn't serializable so 'globalHistory' is the list of clocking for the serialisartion (use for the save and the read)
-    //'final' for that no one modify it
+    /**
+     * 'clockingList' isn't serializable so 'globalHistory' is the list of clocking for the serialisartion (use for the save and the read)
+     * 'final' for that no one modify it
+     */
     private final List<Check> globalHistory = new ArrayList<>();
 
     //- - - CONSTRUCTOR - - -
+    /**
+     * Constructs a new ClockingManager object
+     */
     public ClockingManager()
     {
-        //@SuppressWarnings("unchecked")
         //We read the clocking file with the Serialisation class, then we cast it so that it is a list of check
         List<Check> loadHistory = (List<Check>) Serialization.loadObject(fileName);
 
@@ -54,17 +62,23 @@ public class ClockingManager implements Serializable {
     //- - - GETTER - - -
     /**
      * we return the clocking list
+     * @return clockingList : the list of clocking for JavaFx display
      */
     public ObservableList<Check> getClockingList() { return clockingList; }
 
     /**
-     * we return the global history
+     * we return the global history list
+     * @return globalHistory : the list of clocking for the file .ser
      */
     public List<Check> getGlobalHistory() { return globalHistory; }
 
     //- - - METHODS - - -
     /**
      * Builds a Check with the correct CheckType calculated automatically.
+     * @param employeeId : UUID
+     * @param date : LocalDate
+     * @param time : LocalTime
+     * @return Check : object Check class
      */
     public Check createAutomaticClocking(UUID employeeId, LocalDate date, LocalTime time)
     {
@@ -73,9 +87,13 @@ public class ClockingManager implements Serializable {
     }
 
     /**
-     * Détermine  IN ou OUT.
+     * This method allows to determine the type of check
+     * We take several parameters for determine the type (ex : the date : today or tomorrow)
+     * @param employeeId : UUID
+     * @param dateNewClocking : LocalDate
+     * @return Check : object Check class
      */
-    private CheckType determineNextType(UUID employeeId, LocalDate dateDuNouveauPointage)
+    private CheckType determineNextType(UUID employeeId, LocalDate dateNewClocking)
     {
         Check lastClocking = getLastCheckForEmployee(employeeId);
 
@@ -89,7 +107,7 @@ public class ClockingManager implements Serializable {
 
         //two cases :
         //it's today, we change the type
-        if (dateDuNouveauPointage.isEqual(dateLastClocking))
+        if (dateNewClocking.isEqual(dateLastClocking))
         {
             //if the last clocking is OUT, then it's IN
             //else it's OUT
@@ -97,7 +115,7 @@ public class ClockingManager implements Serializable {
         }
 
         //it's the next day
-        if (dateDuNouveauPointage.isAfter(dateLastClocking))
+        if (dateNewClocking.isAfter(dateLastClocking))
         {
 
             //If the last clocking from the previous day was IN, then there is a oversight
@@ -114,7 +132,9 @@ public class ClockingManager implements Serializable {
     }
 
     /**
-     * return the most recent clocking record for a given employee.
+     * return the most recent clocking record for a given employee in parameter.
+     * @param employeeId : UUID
+     * @return check or null
      */
     private Check getLastCheckForEmployee(UUID employeeId) {
         //we go through the list upside down to find the most recent one.
@@ -131,6 +151,7 @@ public class ClockingManager implements Serializable {
 
     /**
      * add a cloking in the both lists of check and we update the display of the main IHM
+     * @param check : Check
      */
     public synchronized void addClocking(Check check)
     {
@@ -149,7 +170,7 @@ public class ClockingManager implements Serializable {
     }
 
     /**
-     * we save the data in the clocking file
+     * we save the data in the clocking file with the help of Serialization class
      */
     private void saveData()
     {
@@ -158,6 +179,7 @@ public class ClockingManager implements Serializable {
 
     /**
      * we delete a clocking both lists
+     * @param check : Check
      */
     public void deleteClocking(Check check)
     {
@@ -179,6 +201,7 @@ public class ClockingManager implements Serializable {
 
     /**
      * we allow to modify the clocking in both lists
+     * @param editCheck : Check
      */
     public void editClocking(Check editCheck)
     {
@@ -228,6 +251,10 @@ public class ClockingManager implements Serializable {
         });
     }
 
+    /**
+     * we allow to manage the different error and alert the user
+     * So the alert is detailed
+     */
     private void displaySelectionAlert()
     {
         //Platform.runLater ensures that the pop-up opens on the main IHM

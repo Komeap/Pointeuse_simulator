@@ -57,7 +57,7 @@ public class PrincipalApplicationMMI extends Application {
         EmployeeManager employeeManager = new EmployeeManager(departments);
 
         Server server = new Server(clockingManager);
-        server.demarrer(); //ENCORE EN FRANCAIS DANS Server.java
+        server.start();
 
         /* NAVBAR */
 
@@ -87,7 +87,7 @@ public class PrincipalApplicationMMI extends Application {
         colDepartment.setCellValueFactory(cellData -> {
             Department dep = cellData.getValue().getDepartment();
             return new javafx.beans.property.SimpleStringProperty(
-                    dep == null ? "N/A" : dep.getDepartement()
+                    dep == null ? "N/A" : dep.getDepartment()
             );
         });
 
@@ -197,7 +197,7 @@ public class PrincipalApplicationMMI extends Application {
 
             return new javafx.beans.property.SimpleStringProperty(
                     (emp != null && emp.getDepartment() != null)
-                            ? emp.getDepartment().getDepartement()
+                            ? emp.getDepartment().getDepartment()
                             : "N/A"
             );
         });

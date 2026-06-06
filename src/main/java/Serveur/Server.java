@@ -35,9 +35,10 @@ public class Server {
 
     //- - - METHOD - - -
     /**
-     * this method lunch the server so that he listens and add the new clocking
+     * this method lunch the server on the port so that he listens and add the new clocking it receives
+     * The exceptions are managed.
      */
-    public void demarrer() {
+    public void start() {
 
         Thread serveurThread = new Thread(() -> { //We create a thread to avoid stop the program.
 

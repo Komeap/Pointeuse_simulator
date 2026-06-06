@@ -11,21 +11,19 @@ import java.util.Map;
  */
 public class Planning implements Serializable {
 
-	// HashMap to store the working days
-	private Map<DayOfWeek, WorkDay> scheduleMap;
+	//- - - ATTRIBUTE - - -
+	private Map<DayOfWeek, WorkDay> scheduleMap; // HashMap to store the working days
 
-	// Constructor: initializes an empty schedule
+	// - - - CONSTRUCTOR - - -
 	public Planning() {
 		this.scheduleMap = new HashMap<>();
 	}
 
-	// Adds or updates the working hours for a specific day
+	// - - - SETTER - - -
 	public void setWorkDay(DayOfWeek day, WorkDay workDay) {
 		scheduleMap.put(day, workDay);
 	}
 
-	// Gets the working hours for a given day (returns null if the employee is not working)
-	public WorkDay getWorkDay(DayOfWeek day) {
-		return scheduleMap.get(day);
-	}
+	// - - - GETTER - - -
+	public WorkDay getWorkDay(DayOfWeek day) { return scheduleMap.get(day); } //(returns null if the employee is not working)
 }
