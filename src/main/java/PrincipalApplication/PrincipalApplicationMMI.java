@@ -37,10 +37,10 @@ public class PrincipalApplicationMMI extends Application {
         /* BACKEND */
         ClockingManager clockingManager = new ClockingManager();
 
-        List<Department> departmentsInitiaux = new ArrayList<>();
-        departmentsInitiaux.add(new Department("Human Resources"));
-        departmentsInitiaux.add(new Department("IT Development"));
-        departmentsInitiaux.add(new Department("Accounting"));
+        List<Department> initialDepartments = new ArrayList<>();
+        initialDepartments.add(new Department("Human Resources"));
+        initialDepartments.add(new Department("IT Development"));
+        initialDepartments.add(new Department("Accounting"));
 
         ObservableList<Department> departments = FXCollections.observableArrayList();
 
@@ -50,26 +50,26 @@ public class PrincipalApplicationMMI extends Application {
         if (loaded != null) {
             departments.addAll(loaded);
         } else {
-            // Si le fichier n'existe pas encore, on charge ceux par défaut
-            departments.addAll(departmentsInitiaux);
+            // If the file doesn't exist yet, we load the default ones
+            departments.addAll(initialDepartments);
         }
 
-        EmployeeManager gestionEmployee = new EmployeeManager(departments);
+        EmployeeManager employeeManager = new EmployeeManager(departments);
 
-        Server monServeur = new Server(clockingManager);
-        monServeur.demarrer();
+        Server server = new Server(clockingManager);
+        server.demarrer(); //ENCORE EN FRANCAIS DANS Server.java
 
         /* NAVBAR */
 
         Button btnEmployee = new Button("Employee");
-        Button btnPointage = new Button("Check");
+        Button btnCheck = new Button("Check");
         Button btnDepartment = new Button("Department");
 
         btnEmployee.getStyleClass().add("nav-button");
-        btnPointage.getStyleClass().add("nav-button");
+        btnCheck.getStyleClass().add("nav-button");
         btnDepartment.getStyleClass().add("nav-button");
 
-        HBox navbar = new HBox(15, btnEmployee, btnPointage, btnDepartment);
+        HBox navbar = new HBox(15, btnEmployee, btnCheck, btnDepartment);
         navbar.getStyleClass().add("navbar");
 
         /* TABLE EMPLOYEES */
@@ -93,7 +93,7 @@ public class PrincipalApplicationMMI extends Application {
 
         tableEmployee.getColumns().addAll(colEmpId, colFirstName, colLastName, colDepartment);
 
-        tableEmployee.setItems(gestionEmployee.getEmployeeList());
+        tableEmployee.setItems(employeeManager.getEmployeeList());
         tableEmployee.setPrefHeight(500);
         tableEmployee.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -103,27 +103,27 @@ public class PrincipalApplicationMMI extends Application {
 
         HBox employeeActions = new HBox(10, btnAddEmployee, btnEditEmployee, btnDeleteEmployee);
 
-        btnAddEmployee.setOnAction(e -> gestionEmployee.addEmployee());
+        btnAddEmployee.setOnAction(e -> employeeManager.addEmployee());
 
         btnEditEmployee.setOnAction(e -> {
             Employee selection = tableEmployee.getSelectionModel().getSelectedItem();
-            gestionEmployee.modifyEmployee(selection);
+            employeeManager.modifyEmployee(selection);
         });
 
         btnDeleteEmployee.setOnAction(e -> {
             Employee selection = tableEmployee.getSelectionModel().getSelectedItem();
-            gestionEmployee.deleteEmployee(selection);
+            employeeManager.deleteEmployee(selection);
         });
 
         PlanningService planningService = new PlanningService();
-        HBox barrePlanningVisualisation = new HBox();
-        Label lblInfoPlanning = new Label("Select an employee to display their schedule");
-        lblInfoPlanning.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 14px;");
+        HBox visualScheduleBar = new HBox();
+        Label lblScheduleInfo = new Label("Select an employee to display their schedule");
+        lblScheduleInfo.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 14px;");
 
-        HBox selecteurJours = new HBox(10);
-        ToggleGroup groupeJours = new ToggleGroup();
+        HBox daySelector = new HBox(10);
+        ToggleGroup dayGroup = new ToggleGroup();
 
-        java.time.DayOfWeek[] joursSemaine = {
+        java.time.DayOfWeek[] daysOfWeek = {
                 java.time.DayOfWeek.MONDAY,
                 java.time.DayOfWeek.TUESDAY,
                 java.time.DayOfWeek.WEDNESDAY,
@@ -133,25 +133,25 @@ public class PrincipalApplicationMMI extends Application {
                 java.time.DayOfWeek.SUNDAY
         };
 
-        String[] nomsJours = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
+        String[] dayNames = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 
-        for (int i = 0; i < joursSemaine.length; i++) {
-            ToggleButton btnJour = new ToggleButton(nomsJours[i]);
-            btnJour.setToggleGroup(groupeJours);
-            btnJour.setUserData(joursSemaine[i]);
-            if (i == 0) btnJour.setSelected(true);
-            selecteurJours.getChildren().add(btnJour);
+        for (int i = 0; i < daysOfWeek.length; i++) {
+            ToggleButton btnDay = new ToggleButton(dayNames[i]);
+            btnDay.setToggleGroup(dayGroup);
+            btnDay.setUserData(daysOfWeek[i]);
+            if (i == 0) btnDay.setSelected(true);
+            daySelector.getChildren().add(btnDay);
         }
 
         tableEmployee.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            mettreAJourPlanningVisuel(tableEmployee, groupeJours, planningService, barrePlanningVisualisation, lblInfoPlanning);
+            updateVisualSchedule(tableEmployee, dayGroup, planningService, visualScheduleBar, lblScheduleInfo);
         });
 
-        groupeJours.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+        dayGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null) {
-                groupeJours.selectToggle(oldVal);
+                dayGroup.selectToggle(oldVal);
             } else {
-                mettreAJourPlanningVisuel(tableEmployee, groupeJours, planningService, barrePlanningVisualisation, lblInfoPlanning);
+                updateVisualSchedule(tableEmployee, dayGroup, planningService, visualScheduleBar, lblScheduleInfo);
             }
         });
 
@@ -160,9 +160,9 @@ public class PrincipalApplicationMMI extends Application {
                 employeeActions,
                 tableEmployee,
                 new Separator(),
-                selecteurJours,
-                lblInfoPlanning,
-                barrePlanningVisualisation
+                daySelector,
+                lblScheduleInfo,
+                visualScheduleBar
         );
 
         pageEmployee.setPadding(new Insets(15));
@@ -171,7 +171,6 @@ public class PrincipalApplicationMMI extends Application {
 
         TableView<Check> tablePointage = new TableView<>();
 
-        // Les colonnes en anglais uniquement
         TableColumn<Check, String> colCheckFirstName = new TableColumn<>("First Name");
         TableColumn<Check, String> colCheckLastName = new TableColumn<>("Last Name");
         TableColumn<Check, String> colCheckDept = new TableColumn<>("Department");
@@ -182,19 +181,19 @@ public class PrincipalApplicationMMI extends Application {
 
         colCheckFirstName.setCellValueFactory(cellData -> {
             UUID empId = cellData.getValue().getEmployeeUUID();
-            Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
+            Employee emp = findEmployeeById(employeeManager.getEmployeeList(), empId);
             return new javafx.beans.property.SimpleStringProperty(emp != null ? emp.getFirstName() : "Unknown");
         });
 
         colCheckLastName.setCellValueFactory(cellData -> {
             UUID empId = cellData.getValue().getEmployeeUUID();
-            Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
+            Employee emp = findEmployeeById(employeeManager.getEmployeeList(), empId);
             return new javafx.beans.property.SimpleStringProperty(emp != null ? emp.getLastName() : "Unknown");
         });
 
         colCheckDept.setCellValueFactory(cellData -> {
             UUID empId = cellData.getValue().getEmployeeUUID();
-            Employee emp = trouverEmployeeParId(gestionEmployee.getEmployeeList(), empId);
+            Employee emp = findEmployeeById(employeeManager.getEmployeeList(), empId);
 
             return new javafx.beans.property.SimpleStringProperty(
                     (emp != null && emp.getDepartment() != null)
@@ -270,7 +269,7 @@ public class PrincipalApplicationMMI extends Application {
             if (dep == null) return;
 
             // unlink employees
-            for (Employee emp : gestionEmployee.getEmployeeList()) {
+            for (Employee emp : employeeManager.getEmployeeList()) {
                 if (dep.equals(emp.getDepartment())) {
                     emp.setDepartment(null);
                 }
@@ -299,7 +298,7 @@ public class PrincipalApplicationMMI extends Application {
         /* NAV */
 
         btnEmployee.setOnAction(e -> root.setCenter(pageEmployee));
-        btnPointage.setOnAction(e -> root.setCenter(pagePointage));
+        btnCheck.setOnAction(e -> root.setCenter(pagePointage));
         btnDepartment.setOnAction(e -> root.setCenter(pageDepartment));
 
         root.setTop(navbar);
@@ -315,9 +314,9 @@ public class PrincipalApplicationMMI extends Application {
         stage.show();
     }
 
-    private Employee trouverEmployeeParId(ObservableList<Employee> liste, UUID id) {
+    private Employee findEmployeeById(ObservableList<Employee> list, UUID id) {
         if (id == null) return null;
-        for (Employee e : liste) {
+        for (Employee e : list) {
             if (id.equals(e.getEmployeeId())) return e;
         }
         return null;
@@ -327,13 +326,13 @@ public class PrincipalApplicationMMI extends Application {
         launch();
     }
 
-    private void mettreAJourPlanningVisuel(TableView<Employee> table, ToggleGroup groupe, PlanningService service, HBox barre, Label label) {
-        Employee empSelectionne = table.getSelectionModel().getSelectedItem();
-        ToggleButton jourSelectionne = (ToggleButton) groupe.getSelectedToggle();
+    private void updateVisualSchedule(TableView<Employee> table, ToggleGroup group, PlanningService service, HBox bar, Label label) {
+        Employee selectedEmp = table.getSelectionModel().getSelectedItem();
+        ToggleButton selectedDayBtn = (ToggleButton) group.getSelectedToggle();
 
-        if (empSelectionne != null && jourSelectionne != null) {
-            java.time.DayOfWeek jour = (java.time.DayOfWeek) jourSelectionne.getUserData();
-            service.chargerPlanning(barre, label, empSelectionne, jour);
+        if (selectedEmp != null && selectedDayBtn != null) {
+            java.time.DayOfWeek day = (java.time.DayOfWeek) selectedDayBtn.getUserData();
+            service.loadSchedule(bar, label, selectedEmp, day);
         }
     }
 }

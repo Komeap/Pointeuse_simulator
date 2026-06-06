@@ -9,36 +9,46 @@ import javafx.scene.control.Label;
 
 import java.time.DayOfWeek;
 
+/**
+ * Service used to visually display an employee's schedule.
+ */
 public class PlanningService {
 
     /**
-     * Charge  le planning visuel d'un employé pour un jour donné
+     * Loads and displays the visual schedule of an employee for a specific day.
      */
-    public void chargerPlanning(HBox barre, Label labelInfo, Employee emp, DayOfWeek jour) {
+    public void loadSchedule(HBox bar, Label labelInfo, Employee emp, DayOfWeek day) {
         if (emp != null && emp.getPlanning() != null) {
-            barre.getChildren().clear();
-            barre.setSpacing(2);
 
-            WorkDay j = emp.getPlanning().getWorkDay(jour);
+            // Clear the previous visual bar
+            bar.getChildren().clear();
+            bar.setSpacing(2);
 
-            if (j != null && j.getStartTime() != null && j.getEndTime() != null) {
-                // Calcul des index (1 heure = 4 quarts d'heure, 24h = 96 rectangles)
-                int debut = j.getStartTime().getHour() * 4 + (j.getStartTime().getMinute() / 15);
-                int fin = j.getEndTime().getHour() * 4 + (j.getEndTime().getMinute() / 15);
+            WorkDay wd = emp.getPlanning().getWorkDay(day);
 
+            if (wd != null && wd.getStartTime() != null && wd.getEndTime() != null) {
+
+                // Calculate grid indexes (1 hour = 4 blocks of 15 mins, so 24h = 96 rectangles)
+                int start = wd.getStartTime().getHour() * 4 + (wd.getStartTime().getMinute() / 15);
+                int end = wd.getEndTime().getHour() * 4 + (wd.getEndTime().getMinute() / 15);
+
+                // Create the 96 rectangles to represent the whole day
                 for (int i = 0; i < 96; i++) {
                     Rectangle r = new Rectangle(12, 25);
-                    // Si l'index est entre le début et la fin du travail Bleu, sinon Gris
-                    r.setFill((i >= debut && i < fin) ? Color.CORNFLOWERBLUE : Color.LIGHTGRAY);
-                    barre.getChildren().add(r);
+
+                    // Color the rectangle blue if it's working time, otherwise gray
+                    r.setFill((i >= start && i < end) ? Color.CORNFLOWERBLUE : Color.LIGHTGRAY);
+                    bar.getChildren().add(r);
                 }
-                labelInfo.setText("Schedule for " + jour + " for " + emp.getFirstName() + ": " + j.getStartTime() + " - " + j.getEndTime());
+
+                // Update the information text
+                labelInfo.setText("Schedule for " + day + " for " + emp.getFirstName() + ": " + wd.getStartTime() + " - " + wd.getEndTime());
             } else {
-                barre.getChildren().clear();
+                bar.getChildren().clear();
                 labelInfo.setText("No working hours defined for this day for " + emp.getFirstName());
             }
         } else {
-            barre.getChildren().clear();
+            bar.getChildren().clear();
             labelInfo.setText("No schedule available for this employee.");
         }
     }
