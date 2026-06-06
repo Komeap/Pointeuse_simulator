@@ -86,9 +86,12 @@ public class PrincipalApplicationMMI extends Application {
         colLastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
         colDepartment.setCellValueFactory(cellData -> {
             Department dep = cellData.getValue().getDepartment();
-            return new javafx.beans.property.SimpleStringProperty(
-                    dep == null ? "N/A" : dep.getDepartment()
-            );
+
+            String name = (dep == null || dep.getDepartment() == null)
+                    ? "N/A"
+                    : dep.getDepartment();
+
+            return new javafx.beans.property.SimpleStringProperty(name);
         });
 
         tableEmployee.getColumns().addAll(colEmpId, colFirstName, colLastName, colDepartment);
@@ -118,7 +121,11 @@ public class PrincipalApplicationMMI extends Application {
         PlanningService planningService = new PlanningService();
         HBox visualScheduleBar = new HBox();
         Label lblScheduleInfo = new Label("Select an employee to display their schedule");
-        lblScheduleInfo.setStyle("-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-font-size: 14px;");
+        lblScheduleInfo.setStyle(
+                "-fx-font-weight: bold;" +
+                        "-fx-text-fill: #5C4033;" +
+                        "-fx-font-size: 14px;"
+        );
 
         HBox daySelector = new HBox(10);
         ToggleGroup dayGroup = new ToggleGroup();
@@ -155,8 +162,12 @@ public class PrincipalApplicationMMI extends Application {
             }
         });
 
-        VBox pageEmployee = new VBox(15,
-                new Label("Employees"),
+        Label employeeTitle = new Label("Employees");
+        employeeTitle.getStyleClass().add("page-title");
+
+        VBox pageEmployee = new VBox(
+                15,
+                employeeTitle,
                 employeeActions,
                 tableEmployee,
                 new Separator(),
@@ -209,6 +220,53 @@ public class PrincipalApplicationMMI extends Application {
         tablePointage.getColumns().addAll(colCheckFirstName, colCheckLastName, colCheckDept, colDate, colTime, colType);
 
         tablePointage.setItems(clockingManager.getClockingList());
+
+        tablePointage.setRowFactory(tv -> new TableRow<Check>() {
+
+            @Override
+            protected void updateItem(Check check, boolean empty) {
+                super.updateItem(check, empty);
+
+                if (check == null || empty) {
+                    setStyle("");
+                    return;
+                }
+
+                Employee emp = findEmployeeById(
+                        employeeManager.getEmployeeList(),
+                        check.getEmployeeUUID()
+                );
+
+                if (emp == null || emp.getPlanning() == null) {
+                    setStyle("");
+                    return;
+                }
+
+                java.time.DayOfWeek day = check.getDate().getDayOfWeek();
+                Planning.WorkDay workDay = emp.getPlanning().getWorkDay(day);
+
+
+                if (workDay == null) {
+                    setStyle("-fx-background-color: #ff4d4d;"); // rouge
+                    return;
+                }
+
+                LocalTime start = workDay.getStartTime();
+                LocalTime end = workDay.getEndTime();
+
+                LocalTime time = check.getTime();
+
+
+                if (time.isBefore(start) || time.isAfter(end)) {
+                    setStyle("-fx-background-color: #ffb84d;"); // orange
+                    return;
+                }
+
+
+                setStyle("");
+            }
+        });
+
         tablePointage.setPrefHeight(500);
         tablePointage.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -227,8 +285,13 @@ public class PrincipalApplicationMMI extends Application {
             clockingManager.deleteClocking(selection);
         });
 
-        VBox pagePointage = new VBox(10,
-                new Label("Check"),
+        Label checkTitle = new Label("Check");
+        checkTitle.getStyleClass().add("page-title");
+
+
+        VBox pagePointage = new VBox(
+                15,
+                checkTitle,
                 checkActions,
                 tablePointage
         );
@@ -240,7 +303,7 @@ public class PrincipalApplicationMMI extends Application {
         TableView<Department> tableDepartment = new TableView<>();
 
         TableColumn<Department, String> colDepName = new TableColumn<>("Department");
-        colDepName.setCellValueFactory(new PropertyValueFactory<>("departement"));
+        colDepName.setCellValueFactory(new PropertyValueFactory<>("department"));
 
         tableDepartment.getColumns().add(colDepName);
         tableDepartment.setItems(departments);
@@ -287,8 +350,11 @@ public class PrincipalApplicationMMI extends Application {
 
         HBox departmentActions = new HBox(10, btnAddDepartment, btnDeleteDepartment);
 
-        VBox pageDepartment = new VBox(10,
-                new Label("Departments"),
+        Label departmentTitle = new Label("Departments");
+        departmentTitle.getStyleClass().add("page-title");
+        VBox pageDepartment = new VBox(
+                15,
+                departmentTitle,
                 departmentActions,
                 tableDepartment
         );
@@ -305,6 +371,20 @@ public class PrincipalApplicationMMI extends Application {
         root.setCenter(pageEmployee);
 
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+
+        btnAddEmployee.getStyleClass().add("action-button");
+        btnEditEmployee.getStyleClass().add("action-button");
+        btnDeleteEmployee.getStyleClass().add("action-button");
+
+        btnEditCheck.getStyleClass().add("action-button");
+        btnDeleteCheck.getStyleClass().add("action-button");
+
+        btnAddDepartment.getStyleClass().add("action-button");
+        btnDeleteDepartment.getStyleClass().add("action-button");
+
+        pageEmployee.getStyleClass().add("page");
+        pagePointage.getStyleClass().add("page");
+        pageDepartment.getStyleClass().add("page");
 
         Scene scene = new Scene(root, screenBounds.getWidth(), screenBounds.getHeight());
         scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());

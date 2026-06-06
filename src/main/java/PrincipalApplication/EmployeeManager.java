@@ -45,7 +45,7 @@ public class EmployeeManager {
      */
     public EmployeeManager(List<Department> departments) {
         this.employeeList = FXCollections.observableArrayList();
-        this.departmentList = FXCollections.observableArrayList(departments);
+        this.departmentList = (ObservableList<Department>) departments;
 
         //we try to load previously saved employees
         @SuppressWarnings("unchecked")
@@ -93,8 +93,8 @@ public class EmployeeManager {
         TextField lastNameField = new TextField();
         lastNameField.setPromptText("Last Name");
 
-        ComboBox<Department> deptComboBox =
-                new ComboBox<>(departmentList);
+        ComboBox<Department> deptComboBox = new ComboBox<>();
+        deptComboBox.setItems(departmentList);
         deptComboBox.setPromptText("Select a department");
 
         gridInfo.add(new Label("First Name:"), 0, 0);

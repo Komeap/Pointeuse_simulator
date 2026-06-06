@@ -86,6 +86,12 @@ public class DepartmentManager {
         //we remove the department from the list
         departmentList.remove(dep);
 
+        employees.forEach(emp -> {
+            if (dep.equals(emp.getDepartment())) {
+                emp.setDepartment(null);
+            }
+        });
+
         //we save changes
         save();
     }
