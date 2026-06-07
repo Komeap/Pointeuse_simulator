@@ -73,30 +73,33 @@ public class EmployeeManager {
      */
     public void addEmployee() {
 
+        //creation and opening of a dialog to create an employee
         Dialog<Employee> dialog = new Dialog<>();
         dialog.setTitle("Add an Employee");
         dialog.setHeaderText("Please fill in the employee information and schedule");
 
-        ButtonType validatingButton =
-                new ButtonType("Add", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes()
-                .addAll(validatingButton, ButtonType.CANCEL);
+        // add the validating button for the dialog
+        ButtonType validatingButton = new ButtonType("Add", ButtonBar.ButtonData.OK_DONE);dialog.getDialogPane().getButtonTypes().addAll(validatingButton, ButtonType.CANCEL);
 
         //main employee info form
         GridPane gridInfo = new GridPane();
         gridInfo.setHgap(10);
         gridInfo.setVgap(10);
 
+        // entry field for the firstname
         TextField firstNameField = new TextField();
         firstNameField.setPromptText("First Name");
 
+        // entry field the lastname
         TextField lastNameField = new TextField();
         lastNameField.setPromptText("Last Name");
 
+        // creation of a combobox to display our list of department
         ComboBox<Department> deptComboBox = new ComboBox<>();
         deptComboBox.setItems(departmentList);
         deptComboBox.setPromptText("Select a department");
 
+        // all the label to indicate which field/combobox is for what
         gridInfo.add(new Label("First Name:"), 0, 0);
         gridInfo.add(firstNameField, 1, 0);
         gridInfo.add(new Label("Last Name:"), 0, 1);
@@ -118,8 +121,7 @@ public class EmployeeManager {
         //generate default schedule
         Planning.Planning randomBase = randomPlanningGenerator();
 
-        VBox planningBox =
-                createSchedulePanel(cbDays, cbStart, cbEnd, lblTotal, randomBase);
+        VBox planningBox = createSchedulePanel(cbDays, cbStart, cbEnd, lblTotal, randomBase);
 
         VBox mainContainer = new VBox(20);
         mainContainer.setPadding(new Insets(20, 20, 10, 20));
