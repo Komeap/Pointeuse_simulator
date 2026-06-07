@@ -37,11 +37,6 @@ public class PrincipalApplicationMMI extends Application {
         /* BACKEND */
         ClockingManager clockingManager = new ClockingManager();
 
-        List<Department> initialDepartments = new ArrayList<>();
-        initialDepartments.add(new Department("Human Resources"));
-        initialDepartments.add(new Department("IT Development"));
-        initialDepartments.add(new Department("Accounting"));
-
         ObservableList<Department> departments = FXCollections.observableArrayList();
 
         @SuppressWarnings("unchecked")
@@ -49,9 +44,6 @@ public class PrincipalApplicationMMI extends Application {
 
         if (loaded != null) {
             departments.addAll(loaded);
-        } else {
-            // If the file doesn't exist yet, we load the default ones
-            departments.addAll(initialDepartments);
         }
 
         EmployeeManager employeeManager = new EmployeeManager(departments);
