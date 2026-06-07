@@ -10,9 +10,10 @@ import java.io.*;
 public class Serialization implements Serializable {
 
     // - - - METHODS - - -
-
     /**
      * This method allows to save the informations of an object in the file in parameter
+     * @param obj : Object
+     * @param fileName : String
      */
     public static void saveObject(Object obj, String fileName)
     {
@@ -29,6 +30,8 @@ public class Serialization implements Serializable {
 
     /**
      * we allow to load a file and return the object who was in the file
+     * @param fileName : String
+     * @return Object
      */
     public static Object loadObject(String fileName) {
         try (FileInputStream fos = new FileInputStream(fileName); //we open the file

@@ -1,3 +1,9 @@
+/**
+ * This class 'TimeClockMMI' manage the diplay of time clock and the clocking manager.
+ * The user can choose his name and send his clocking to the server so that it sends it to the main application.
+ *
+ */
+
 package TimeClock;
 
 import Check.CheckType;
@@ -37,124 +43,184 @@ import java.util.*;
 
 public class TimeClockMMI extends Application {
 
+    // - - - ATTRIBUTES - - -
+    /**
+     * this list stock the checks before send it to the server
+     */
     private static List<Message> bufferPointages = Collections.synchronizedList(new ArrayList<>());
+
+    /**
+     * this attribute is the IP address of server
+     */
     private static String serverIp = "localhost";
+
+    /**
+     * this attribute is the server port
+     */
     private static int serverPort = 5005;
+
+    /**
+     * this attribute is the time that we take for the refresh
+     */
     private static int refreshSeconds = 5;
 
-    public static synchronized void setServerIp(String ip) {
-        serverIp = ip;
-    }
+    // - - - SETTERS - - -
 
-    public static synchronized void setServerPort(int port) {
-        if (port > 0 && port <= 65535) {
+    /**
+     * it's the setter of server IP
+     * @param ip : String
+     */
+    public static synchronized void setServerIp(String ip) {serverIp = ip;}
+
+    /**
+     * it's the setter of server port
+     * @param port : int
+     */
+    public static synchronized void setServerPort(int port)
+    {
+        //We check that the port in parameter exits
+        if (port > 0 && port <= 65535)
             serverPort = port;
-        }
     }
 
-    public static synchronized void setRefreshSeconds(int seconds) {
-        if (seconds > 0) {
+    /**
+     * it's the setter for the refresh time
+     * @param seconds : int
+     */
+    public static synchronized void setRefreshSeconds(int seconds)
+    {
+        //We can check that the time it's positive (a negative refresh time is impossible)
+        if (seconds > 0)
             refreshSeconds = seconds;
-        }
     }
 
-    public static synchronized int getRefreshSeconds() {
-        return refreshSeconds;
-    }
+    // - - - GETTER - - -
+    /**
+     * getter for the refresh time
+     * @return int
+     */
+    public static synchronized int getRefreshSeconds() {return refreshSeconds;}
 
-    // Bloc statique pour charger la sauvegarde au lancement de la classe
-    static {
+    /**
+     * static block to restore the data in the 'buffer_pointeuse.ser' file and be able to display it afterwards
+     */
+    static
+    {
         @SuppressWarnings("unchecked")
-        List<Message> charge = (List<Message>) Serialization.loadObject("buffer_pointeuse.ser");
-        if (charge != null) {
-            bufferPointages.addAll(charge);
-            System.out.println("Pointages restaurés : " + bufferPointages.size());
+        List<Message> loadBuffer = (List<Message>) Serialization.loadObject("buffer_pointeuse.ser");
+        if (loadBuffer != null) //We check that the loadBuffer has been load
+        {
+            bufferPointages.addAll(loadBuffer);
+            System.out.println("clocking restored : " + bufferPointages.size());
         }
     }
 
-    public static void main(String[] args) {
-        // Lance l'application JavaFX
+    /**
+     * main for lunch the javaFx application
+     * @param args : String
+     */
+    public static void main(String[] args)
+    {
         launch(args);
     }
 
+    /**
+     * This method initializes and then displays the interface of the time clock emulator in JavaFX
+     * So it allows you to configure the time display to have the time of attendance.
+     * It updates the files. ser
+     * It allows you to configure the information of the server with which it communicates.
+     * @param primaryStage : Stage : the primary window for the application
+     */
     @Override
-    public void start(Stage primaryStage) {
-        // Démarrage du thread d'envoi en arrière-plan
-        demarrerThreadEnvoi();
+    public void start(Stage primaryStage)
+    {
+        //start the thread who send the information to server.
+        startThread();
 
-        primaryStage.setTitle("Pointeuse Emulateur");
+        primaryStage.setTitle("Emulator Time Clock");
 
-        // Affichage de la date et de l'heure
-        Label labelDate = new Label("Chargement...");
+        //display the date and time
+        Label labelDate = new Label("loading..."); //the time that the date is displayed
         labelDate.setFont(Font.font("Arial", 20));
 
-        Label labelHeure = new Label("Chargement...");
-        labelHeure.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        Label labelTime = new Label("loading..."); //the time that the hour is displayed
+        labelTime.setFont(Font.font("Arial", FontWeight.BOLD, 24));
 
-        Label labelRoundHeure = new Label("");
+        //this is the time rounded to a quarter of an hour
+        Label labelRoundHeure = new Label("loading...");
         labelRoundHeure.setFont(Font.font("Arial", 12));
 
-        //Liste des emplyés dynamique
-
+        //the list of employees (dynamic) who can point
         ComboBox<Employee> choiceEmployer = new ComboBox<>();
 
+        //Here, we load the company’s employees using the 'employees.ser' file.
         Runnable refreshEmployees = () -> {
             @SuppressWarnings("unchecked")
-            List<Employee> listeChargee = (List<Employee>) Serialization.loadObject("employees.ser");
-            if (listeChargee != null && !listeChargee.isEmpty()) {
-                // 1. Sauvegarder l'employé actuellement sélectionné
-                Employee currentSelection = choiceEmployer.getValue();
+            //We load the 'employees.ser' file
+            List<Employee> employeeList = (List<Employee>) Serialization.loadObject("employees.ser");
+            if (employeeList != null && !employeeList.isEmpty())  //we check that there are employees and it's well load
+            {
+                //we save the employee selected
+                Employee employeeSelected = choiceEmployer.getValue();
 
-                // 2. Mettre à jour la liste des éléments du ComboBox
-                choiceEmployer.setItems(FXCollections.observableArrayList(listeChargee));
+                //we update the dynamic list of employee
+                choiceEmployer.setItems(FXCollections.observableArrayList(employeeList));
 
-                // 3. Si aucun employé n'était sélectionné, on prend le premier par défaut
-                if (currentSelection == null) {
+                //we manage the case where there are no selected employees
+                if (employeeSelected == null)
+                {
+                    //so we chose the first employee of the list
                     choiceEmployer.getSelectionModel().selectFirst();
                     return;
                 }
 
-                // 4. Parcourir la nouvelle liste pour retrouver le même employé grâce à son UUID
-                Employee equivalent = null;
-                for (Employee emp : listeChargee) {
-                    if (emp.getEmployeeId() != null && emp.getEmployeeId().equals(currentSelection.getEmployeeId())) {
-                        equivalent = emp;
-                        break;
+                //Here we recup the employee selected by the user, which we will stock in a variable of type 'Employee'.
+                //This allows you to keep the employee selected even if there is a refresh. 
+                //else, the display returns to the first employer in the list.
+                Employee sameEmployee = null;
+                for (Employee employeeInProgress : employeeList)
+                {
+                    //if the id is the same
+                    if (employeeInProgress.getEmployeeId() != null && employeeInProgress.getEmployeeId().equals(employeeSelected.getEmployeeId()))
+                    {
+                        sameEmployee = employeeInProgress;
+                        break; //we leave the loop because we found the employer
                     }
                 }
 
-                // 5. Si on l'a trouvé, on lui réassigne sa place, sinon on se rabat sur le premier
-                if (equivalent != null) {
-                    choiceEmployer.setValue(equivalent);
-                } else {
+                if (sameEmployee != null) //if the employee has been found, he is reassigned his place
+                    choiceEmployer.setValue(sameEmployee);
+                else //else it’s the first one
                     choiceEmployer.getSelectionModel().selectFirst();
-                }
             }
         };
 
-        // Premier chargement au lancement
+        //start the refresh employee
         refreshEmployees.run();
 
+        //we refresh the employees who are selectable every five seconds
         Timeline autoRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(5), event -> {
             refreshEmployees.run();
         }));
+        //these commands allow to refresh every five seconds automatically
         autoRefreshTimeline.setCycleCount(Animation.INDEFINITE);
-        autoRefreshTimeline.play(); // Démarre le scan automatique
+        autoRefreshTimeline.play();
 
-        Button check = new Button("Check in/out");
-        Button btnRefresh = new Button("-><-");
-        Button btnSettings = new Button("⚙");
+        Button checkButton = new Button("Check in/out");
+        //Button btnRefresh = new Button("-><-");
+        Button settingsButton = new Button("⚙");
 
-        btnSettings.setOnAction(e -> {
+        //manage the event on the settings button
+        settingsButton.setOnAction(event -> {
 
             Dialog<ButtonType> dialog = new Dialog<>();
-            dialog.setTitle("Configuration Serveur");
+            dialog.setTitle("Server configuration");
 
-            // Champs
+            //the input fields of the IP and the port
             TextField ipField = new TextField(serverIp);
             TextField portField = new TextField(String.valueOf(serverPort));
 
-            // Layout
+            //grid for the display
             GridPane grid = new GridPane();
             grid.setHgap(10);
             grid.setVgap(10);
@@ -168,58 +234,58 @@ public class TimeClockMMI extends Application {
 
             dialog.getDialogPane().setContent(grid);
 
-            ButtonType saveButton = new ButtonType("Sauvegarder");
+            //the button for save the changement
+            ButtonType saveButton = new ButtonType("Save");
             dialog.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CANCEL);
 
-            Optional<ButtonType> result = dialog.showAndWait();
+            Optional<ButtonType> resultChange = dialog.showAndWait();
 
-            if (result.isPresent() && result.get() == saveButton) {
-                try {
+            if (resultChange.isPresent() && resultChange.get() == saveButton) {
+                try { //we try to change the information port and IP with that the user enter
                     setServerIp(ipField.getText());
                     setServerPort(Integer.parseInt(portField.getText()));
 
-                    System.out.println("Nouvelle configuration : " + serverIp + ":" + serverPort);
+                    System.out.println("New configuration : " + serverIp + ":" + serverPort);
 
-                } catch (NumberFormatException ex) {
-                    System.out.println("Port invalide.");
+                } catch (NumberFormatException error) { //if it's invalid, we manage the error
+                    System.out.println("Invalid port.");
                 }
             }
         });
 
 
-        // Panneau central (Temps) avec un VBox
-        VBox panneauTemps = new VBox(10);
-        panneauTemps.setAlignment(Pos.CENTER);
-        panneauTemps.setPadding(new Insets(20, 0, 0, 0));
+        //the center pannel for the time and date display
+        VBox timeDisplay = new VBox(10);
+        timeDisplay.setAlignment(Pos.CENTER);
+        timeDisplay.setPadding(new Insets(20, 0, 0, 0));
 
-        // AJOUT DES LABELS
-        Label labelEmpty = new Label();
-        panneauTemps.getChildren().addAll(labelDate, labelHeure, labelRoundHeure);
+        //add of the labels in the display
+        timeDisplay.getChildren().addAll(labelDate, labelTime, labelRoundHeure);
 
-        // Barre du haut avec le bouton paramètres
+        //the top bar with parameter button
         HBox topBar = new HBox();
-        topBar.setAlignment(Pos.TOP_RIGHT);
+        topBar.setAlignment(Pos.TOP_RIGHT); //in the top right corner
         topBar.setPadding(new Insets(10));
-        topBar.getChildren().add(btnSettings);
+        topBar.getChildren().add(settingsButton); //we add the settings button
 
-        // Conteneur principal haut + centre
+        //container in the center of display
         VBox topContainer = new VBox();
-        topContainer.getChildren().addAll(topBar, panneauTemps);
+        topContainer.getChildren().addAll(topBar, timeDisplay);
 
-        // Panneau du bas (Contrôles)
-        HBox panneauControles = new HBox(15);
-        panneauControles.setAlignment(Pos.CENTER);
-        panneauControles.setPadding(new Insets(0, 0, 20, 0));
-        panneauControles.getChildren().addAll(choiceEmployer, check);
+        //bottom bar with the list and the button check
+        HBox bottomBar = new HBox(15);
+        bottomBar.setAlignment(Pos.CENTER);
+        bottomBar.setPadding(new Insets(0, 0, 20, 0));
+        bottomBar.getChildren().addAll(choiceEmployer, checkButton);
 
-        // Disposition principale
+        //principal container with the top and bottom container
         BorderPane root = new BorderPane();
         root.setCenter(topContainer);
-        root.setBottom(panneauControles);;
+        root.setBottom(bottomBar);;
 
-        // Événement sur le bouton
-        check.setOnAction(e -> {
-            Employee selected = choiceEmployer.getValue();
+        //manage the event on the check button
+        checkButton.setOnAction(event -> {
+            Employee selected = choiceEmployer.getValue(); //we recup the employee selected
             if (selected != null) {
                 UUID idUnique = selected.getEmployeeId();
 
@@ -236,10 +302,9 @@ public class TimeClockMMI extends Application {
 
         // Événement sur la liste déroulante
         choiceEmployer.setOnAction(e -> {
-            Employee employe = choiceEmployer.getValue();
-            if (employe != null) {
-                System.out.println("Vous avez sélectionné : " + employe.getFirstName() + " " + employe.getLastName());
-            }
+            Employee employe = choiceEmployer.getValue(); //we recup the employee choose
+            if (employe != null)
+                System.out.println("you have chosen : " + employe.getFirstName() + " " + employe.getLastName());
         });
 
         // JavaFX Timeline (remplace le javax.swing.Timer) exécuté chaque seconde
@@ -248,7 +313,7 @@ public class TimeClockMMI extends Application {
 
             // Heure exacte
             DateTimeFormatter formateurH = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.FRENCH);
-            labelHeure.setText(monHeure.format(formateurH));
+            labelTime.setText(monHeure.format(formateurH));
 
             // Date exacte
             DateTimeFormatter formateur = DateTimeFormatter.ofPattern("EEEE d MMMM, yyyy", Locale.FRENCH);
@@ -278,7 +343,8 @@ public class TimeClockMMI extends Application {
         primaryStage.show();
     }
 
-    private static void demarrerThreadEnvoi() {
+
+    private static void startThread() {
         Thread threadEnvoi = new Thread(() -> {
             while (true) {
                 try {
