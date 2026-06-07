@@ -16,20 +16,30 @@ import java.util.List;
 
 public class DepartmentManager {
 
-    //list of departments displayed in JavaFX
+    //- - - ATTRIBUTES - - -
+
+    /**
+     * list of departments displayed in JavaFX
+     */
     private ObservableList<Department> departmentList;
 
-    //file name used for serialization
+    /**
+     * variable for the file name for serialized clocking
+     * 'static' because it's unique and 'final' for that no one modify it
+     */
     private static final String fileName = "departments.ser";
 
-    //constructor initializes the department list and loads saved data if available
+    //- - - CONSTRUCTOR - - -
+
+    /**
+     * Constructs a new DepartmentManager object
+     */
     public DepartmentManager(List<Department> initialDepartments) {
 
         this.departmentList = FXCollections.observableArrayList();
 
         //we try to load previously saved departments from file
-        List<Department> loaded =
-                (List<Department>) Serialization.loadObject(fileName);
+        List<Department> loaded = (List<Department>) Serialization.loadObject(fileName);
 
         //if data exists, we restore it, otherwise we use initial data
         if (loaded != null && !loaded.isEmpty()) {
@@ -39,68 +49,65 @@ public class DepartmentManager {
         }
     }
 
-    //returns observable list for UI binding
+    //- - - GETTER - - -
+    /**
+     * we return the department list
+     * @return departmentList : the list of department for JavaFx display
+     */
     public ObservableList<Department> getDepartmentList() {
         return departmentList;
     }
 
-    //opens a dialog to add a new department
+    //- - - METHODS - - -
+    /**
+     * Opens a dialog to add a new department
+     */
     public void addDepartment() {
 
+        // creation and personalization of the dialog
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Add Department");
         dialog.setHeaderText(null);
         dialog.setContentText("Department name :");
 
         dialog.showAndWait().ifPresent(name -> {
-
             //we check that the input is not empty
             if (!name.trim().isEmpty()) {
-
                 //we create and add the new department
                 departmentList.add(new Department(name));
-
                 //we save the updated list
                 save();
             }
         });
     }
 
-    //removes a department and removes its reference from employees
-    public void deleteDepartment(Department dep,
-                                 ObservableList<Employee> employees) {
-
-        //safety check
+    /**
+     * Removes a department and removes its reference from employees
+     * @param dep : Department
+     * @param employees : ObservableList<Employee>
+     */
+    public void deleteDepartment(Department dep, ObservableList<Employee> employees) {
+        //check if dep is null -> safety check
         if (dep == null) return;
-
         //we remove department reference from all employees linked to it
+        //emp.department set to null to display N/A in the future
         for (Employee emp : employees) {
-
             if (emp.getDepartment() != null &&
                     emp.getDepartment().equals(dep)) {
-
                 emp.setDepartment(null);
             }
         }
 
         //we remove the department from the list
         departmentList.remove(dep);
-
-        employees.forEach(emp -> {
-            if (dep.equals(emp.getDepartment())) {
-                emp.setDepartment(null);
-            }
-        });
-
         //we save changes
         save();
     }
 
-    //saves department list to file
+    /**
+     * we save the data in the department file with the help of Serialization class
+     */
     private void save() {
-        Serialization.saveObject(
-                new ArrayList<>(departmentList),
-                fileName
-        );
+        Serialization.saveObject(new ArrayList<>(departmentList), fileName);
     }
 }

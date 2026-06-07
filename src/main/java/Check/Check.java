@@ -5,6 +5,7 @@
 
 package Check;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -13,7 +14,8 @@ import java.util.Objects;
 
 public class Check implements Serializable
 {
-	private static final long serialVersionUID = 1L;
+	@Serial
+    private static final long serialVersionUID = 1L;
 
 	//- - - ATTRIBUTES - - -
 	private LocalDate date; /** date of clocking */
