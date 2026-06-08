@@ -20,7 +20,7 @@ public class Serialization implements Serializable {
         try(FileOutputStream fis = new FileOutputStream(fileName); //we open or create the file
             ObjectOutputStream oss = new ObjectOutputStream(fis)) //we translate the object in binary
         {
-            oss.writeObject(obj); //we write the informations of the object in the file
+            oss.writeObject(obj); //we write the information of the object in the file
             System.out.println("Objet sauvegardé");
         }
         catch (IOException error) { //we manage the errors
