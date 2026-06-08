@@ -1,6 +1,6 @@
 /**
  * The 'EmployeeManager' class manages a list to display your employee in your principal interface.
- * It provides all the necessary functions to add, modify, and delete employees, as well as manage their department
+ * It provides all the necessary functions to add, modify and delete employees, as well as manage their department
  * assignment and weekly planning, while ensuring data persistence through serialization.
  */
 package PrincipalApplication;
@@ -25,22 +25,20 @@ import java.util.Optional;
 public class EmployeeManager {
 
     // - - - ATTRIBUTES - - -
-    /** list of employees used for JavaFX display (ObservableList for UI updates) */
+    /** list of employees used for JavaFX display */
     private ObservableList<Employee> employeeList;
 
-    /** List of departments used for selection in UI */
+    /** list of departments used for selection in UI */
     private ObservableList<Department> departmentList;
 
     /**
-     * file used for serialization (save/load employees)
-     * 'final' for that no one modify it
-     */
+     * file used for serialization to save/load employees  */
     private static final String fileName = "employees.ser";
 
     //- - - CONSTRUCTOR - - -
 
     /**
-     * Constructor initializes employee list and loads saved data if available
+     *  Initializes employee list and loads saved data if available
      * @param departments : List<Department>
      */
     public EmployeeManager(List<Department> departments) {
@@ -49,10 +47,9 @@ public class EmployeeManager {
 
         //we try to load previously saved employees
         @SuppressWarnings("unchecked")
-        List<Employee> loadFile =
-                (List<Employee>) Serialization.loadObject(fileName);
+        List<Employee> loadFile = (List<Employee>) Serialization.loadObject(fileName);
 
-        //if data exists, we restore it
+        //if data exists we restore it
         if (loadFile != null && !loadFile.isEmpty()) {
             this.employeeList.addAll(loadFile);
         }
@@ -60,7 +57,7 @@ public class EmployeeManager {
 
     // - - - GETTER - - -
     /**
-     * returns observable list for UI binding
+     * returns observable list of employees
      * @return employeeList
      */
     public ObservableList<Employee> getEmployeeList() {
@@ -120,7 +117,6 @@ public class EmployeeManager {
 
         //generate default schedule
         Planning.Planning randomBase = randomPlanningGenerator();
-
         VBox planningBox = createSchedulePanel(cbDays, cbStart, cbEnd, lblTotal, randomBase);
 
         VBox mainContainer = new VBox(20);
@@ -203,13 +199,14 @@ public class EmployeeManager {
      */
     public void modifyEmployee(Employee selectedEmployee) {
 
-        //safety check
+        // verify that an employee was actually clicked in the table
         if (selectedEmployee == null) {
             showError("Missing Selection",
                     "Please select an employee from the table first.");
             return;
         }
 
+        // prepare the dialog window for editing
         Dialog<Employee> dialog = new Dialog<>();
         dialog.setTitle("Modify an Employee");
         dialog.setHeaderText("Modification of: "
@@ -222,10 +219,13 @@ public class EmployeeManager {
         dialog.getDialogPane().getButtonTypes()
                 .addAll(validatingButton, ButtonType.CANCEL);
 
+        //to setup the layout for the user information form
         GridPane gridInfo = new GridPane();
+        //create empty space of 10 pixels between each line and column
         gridInfo.setHgap(10);
         gridInfo.setVgap(10);
 
+        // prefill the text fields and combo box with the current employee's data
         TextField firstNameField =
                 new TextField(selectedEmployee.getFirstName());
 
@@ -234,9 +234,9 @@ public class EmployeeManager {
 
         ComboBox<Department> deptComboBox =
                 new ComboBox<>(departmentList);
-
         deptComboBox.setValue(selectedEmployee.getDepartment());
 
+        //add the elements to the grid
         gridInfo.add(new Label("First Name:"), 0, 0);
         gridInfo.add(firstNameField, 1, 0);
         gridInfo.add(new Label("Last Name:"), 0, 1);
@@ -244,31 +244,33 @@ public class EmployeeManager {
         gridInfo.add(new Label("Department:"), 0, 2);
         gridInfo.add(deptComboBox, 1, 2);
 
+        //to prepare the arrays for the schedule configuration
+        //three table: for days, start of service time and end
         CheckBox[] cbDays = new CheckBox[7];
-
         @SuppressWarnings("unchecked")
         ComboBox<LocalTime>[] cbStart = new ComboBox[7];
-
         @SuppressWarnings("unchecked")
         ComboBox<LocalTime>[] cbEnd = new ComboBox[7];
-
         Label lblTotal = new Label();
 
+        //we generate the schedule panel, passing the existing schedule to pre-fill it
         VBox planningBox =
                 createSchedulePanel(cbDays, cbStart, cbEnd, lblTotal,
                         selectedEmployee.getPlanning());
 
+        //assemble the final layout with proper spacing and margins
         VBox mainContainer = new VBox(20);
         mainContainer.setPadding(new Insets(20, 20, 10, 20));
         mainContainer.getChildren().addAll(gridInfo, new Separator(), planningBox);
 
         dialog.getDialogPane().setContent(mainContainer);
 
-        final Button btOk =
-                (Button) dialog.getDialogPane().lookupButton(validatingButton);
-
+        //to find the save button click to validate inputs first
+        final Button btOk = (Button) dialog.getDialogPane().lookupButton(validatingButton);
+        //we choose to add a filter to prevent the dialog from closing if there is an error
         btOk.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
 
+            // check if name fields are empty
             if (firstNameField.getText().trim().isEmpty()
                     || lastNameField.getText().trim().isEmpty()) {
 
@@ -278,34 +280,36 @@ public class EmployeeManager {
                 return;
             }
 
+            // check if the selected times are logical
             if (!validateSchedules(cbDays, cbStart, cbEnd)) {
                 event.consume();
             }
         });
 
-        //update employee data
+        // if validation passes, update the employee object with the new data
         dialog.setResultConverter(dialogButton -> {
 
             if (dialogButton == validatingButton) {
 
+                // update information
                 selectedEmployee.setFirstName(firstNameField.getText());
                 selectedEmployee.setLastName(lastNameField.getText());
 
                 Department oldDept = selectedEmployee.getDepartment();
                 Department newDept = deptComboBox.getValue();
 
-                //we update department links
+                // handle department transfer if the user changed it
+                // safely transfer the employee because we must remove them from the old department's list
+                // we add them to the new one to prevent data duplication in memory
                 if (oldDept != null && !oldDept.equals(newDept)) {
                     oldDept.removeEmployee(selectedEmployee);
                 }
-
                 if (newDept != null && !newDept.equals(oldDept)) {
                     newDept.addEmployee(selectedEmployee);
                 }
-
                 selectedEmployee.setDepartment(newDept);
 
-                //we rebuild planning
+                // rebuild the weekly schedule from the updated dropdowns
                 Planning.Planning finalPlanning = new Planning.Planning();
                 DayOfWeek[] daysArr = DayOfWeek.values();
 
@@ -328,11 +332,17 @@ public class EmployeeManager {
             return null;
         });
 
-        Optional<Employee> result = dialog.showAndWait();
+        // we show the dialog and save changes if the user confirmed
 
+        // display the window and pause the code until the user clicks save or cancel
+        Optional<Employee> result = dialog.showAndWait();
+        // if the user clicked Save and the data is valid, we process the result
         result.ifPresent(employee -> {
+            //we find the employee's position and overwrite it with itself
+            // We find this trick to force the JavaFX TableView to refresh visually
             int index = employeeList.indexOf(employee);
             employeeList.set(index, employee);
+            // update the serialization file
             saveData();
         });
     }
@@ -343,25 +353,30 @@ public class EmployeeManager {
      */
     public void deleteEmployee(Employee selectedEmployee) {
 
+        // prevent errors if the delete button is clicked without a selection
         if (selectedEmployee == null) {
             showError("Missing Selection",
                     "Please select an employee from the table first.");
             return;
         }
 
+        // we remove the employee from their department to avoid memory leaks
         if (selectedEmployee.getDepartment() != null) {
             selectedEmployee.getDepartment()
                     .removeEmployee(selectedEmployee);
         }
 
+        //we remove from the main list and update the save file
         employeeList.remove(selectedEmployee);
         saveData();
     }
 
     /**
-     * save employee list to file
+     * Saves the current employee list to a local file via serialization
+     *the observable list is converted to a standard ArrayList for compatibility.
      */
     private void saveData() {
+        //we serialize the observable list into a standard ArrayList
         Serialization.saveObject(
                 new ArrayList<>(employeeList),
                 fileName
@@ -376,18 +391,21 @@ public class EmployeeManager {
 
         Planning.Planning planning = new Planning.Planning();
 
+        // create a list of all 7 days of the week and shuffle it to pick random days
         List<DayOfWeek> days = new ArrayList<>(List.of(DayOfWeek.values()));
-
         Collections.shuffle(days);
 
+        // loop 5 times to assign 5 working days per week (we choose 5 just like in real life)
         for (int loop = 0; loop < 5; loop++) {
 
-            int startHour = 8 + (int) (Math.random() * 3);
+            // pick a random start time between 8:00 and 10:00
+            int startHour = 8 + (int) (Math.random() * 3); //so possible start time is 8 or 9 or 10
             LocalTime start = LocalTime.of(startHour, 0);
-            LocalTime end = start.plusHours(7);
 
-            planning.setWorkDay(days.get(loop),
-                    new Planning.WorkDay(start, end));
+            // add exactly 7 hours to the start time (because 5 days * 7 hours = 35h/week)
+            LocalTime end = start.plusHours(7);
+            //we save the work shift into the randomly selected day
+            planning.setWorkDay(days.get(loop), new Planning.WorkDay(start, end));
         }
 
         return planning;
@@ -405,6 +423,7 @@ public class EmployeeManager {
     private VBox createSchedulePanel(CheckBox[] cbDays, ComboBox<LocalTime>[] cbStart, ComboBox<LocalTime>[] cbEnd, Label label, Planning.Planning basePlanning)
     {
 
+        // setup the main container and the grid for the schedule rows
         VBox vbox = new VBox(10);
         vbox.getChildren().add(
                 new Label("Weekly Schedule Configuration:")
@@ -416,8 +435,8 @@ public class EmployeeManager {
 
         DayOfWeek[] daysArr = DayOfWeek.values();
 
+        // generate a list of times in 15-minute increments (00:00, 00:15, etc.)
         List<LocalTime> times = new ArrayList<>();
-
         for (int h = 0; h <= 23; h++) {
             times.add(LocalTime.of(h, 0));
             times.add(LocalTime.of(h, 15));
@@ -425,10 +444,12 @@ public class EmployeeManager {
             times.add(LocalTime.of(h, 45));
         }
 
+        // loop through each day of the week to create its configuration row
         for (int i = 0; i < 7; i++) {
 
             DayOfWeek currentDay = daysArr[i];
 
+            // initialize the UI components for the current day
             cbDays[i] = new CheckBox(
                     capitalize(currentDay.toString())
             );
@@ -439,10 +460,11 @@ public class EmployeeManager {
             cbEnd[i] =
                     new ComboBox<>(FXCollections.observableArrayList(times));
 
+            // disable time selection by default until the day is checked
             cbStart[i].setDisable(true);
             cbEnd[i].setDisable(true);
 
-            //restore existing planning if available
+            // if the employee already has a schedule, pre-select the correct times
             if (basePlanning != null &&
                     basePlanning.getWorkDay(currentDay) != null) {
 
@@ -463,6 +485,7 @@ public class EmployeeManager {
 
             final int index = i;
 
+            // add a listener to enable/disable dropdowns when a day is checked
             cbDays[i].setOnAction(e -> {
 
                 boolean checked = cbDays[index].isSelected();
@@ -470,6 +493,7 @@ public class EmployeeManager {
                 cbStart[index].setDisable(!checked);
                 cbEnd[index].setDisable(!checked);
 
+                // set default working hours if none were previously selected
                 if (checked && cbStart[index].getValue() == null)
                     cbStart[index].setValue(LocalTime.of(9, 0));
 
@@ -479,6 +503,7 @@ public class EmployeeManager {
                 calculateHourTotal(cbDays, cbStart, cbEnd, label);
             });
 
+            // add listeners so the total hours update automatically when a time changes
             cbStart[i].setOnAction(
                     e -> calculateHourTotal(cbDays, cbStart, cbEnd, label)
             );
@@ -487,12 +512,14 @@ public class EmployeeManager {
                     e -> calculateHourTotal(cbDays, cbStart, cbEnd, label)
             );
 
+            // add the day's components to the grid
             grid.add(cbDays[i], 0, i);
             grid.add(cbStart[i], 1, i);
             grid.add(new Label("to"), 2, i);
             grid.add(cbEnd[i], 3, i);
         }
 
+        // calculate the initial total before displaying the panel
         calculateHourTotal(cbDays, cbStart, cbEnd, label);
 
         vbox.getChildren().addAll(grid, label);
@@ -510,6 +537,7 @@ public class EmployeeManager {
 
         int totalMinutes = 0;
 
+        // loop through all 7 days to sum the working minutes
         for (int i = 0; i < 7; i++) {
 
             if (cbDays[i].isSelected()
@@ -519,27 +547,31 @@ public class EmployeeManager {
                 LocalTime start = cbStart[i].getValue();
                 LocalTime end = cbEnd[i].getValue();
 
+                // convert start and end times to minutes for easier calculation
                 int startMins =
                         start.getHour() * 60 + start.getMinute();
 
                 int endMins =
                         end.getHour() * 60 + end.getMinute();
 
+                // handle the edge case where a shift ends exactly at midnight
                 if (endMins == 0) {
                     endMins = 24 * 60;
                 }
 
+                // only add to the total if the time range is logical
                 if (endMins > startMins) {
                     totalMinutes += (endMins - startMins);
                 }
             }
         }
 
+        // convert the total minutes back to hours and remaining minutes
         int hours = totalMinutes / 60;
         int minutes = totalMinutes % 60;
 
+        // format the label to display the calculated total dynamically
         label.setText(String.format("Total scheduled: %dh%02d", hours, minutes));
-
         label.setStyle("-fx-text-fill: #2c3e50; -fx-font-weight: bold;");
     }
 
@@ -559,6 +591,7 @@ public class EmployeeManager {
                 LocalTime start = cbStart[i].getValue();
                 LocalTime end = cbEnd[i].getValue();
 
+                // block the save process if a checked day has missing times
                 if (start == null || end == null) {
                     showError("Schedule Error",
                             "Times missing for "
@@ -576,6 +609,7 @@ public class EmployeeManager {
                     endMins = 24 * 60;
                 }
 
+                // block the save process if the end time is before the start time
                 if (endMins <= startMins) {
                     showError("Schedule Error",
                             "On "
