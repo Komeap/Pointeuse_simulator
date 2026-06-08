@@ -48,7 +48,7 @@ public class TimeClockMMI extends Application {
     /**
      * this list stock the checks before send it to the server
      */
-    private static List<Message> bufferPointages = Collections.synchronizedList(new ArrayList<>());
+    private static List<Message> clockingBuffer = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * this attribute is the IP address of server
@@ -99,6 +99,12 @@ public class TimeClockMMI extends Application {
             refreshSeconds = seconds;
     }
 
+    /**
+     * it's the setter for the rclocking buffer
+     * @param clockingBuffer : List<Message>
+     */
+    public static void setClockingBuffer(List<Message> clockingBuffer) { TimeClockMMI.clockingBuffer = clockingBuffer; }
+
     // - - - GETTER - - -
     /**
      * getter for the refresh time
@@ -106,6 +112,13 @@ public class TimeClockMMI extends Application {
      */
     public static synchronized int getRefreshSeconds() {return refreshSeconds;}
 
+    /**
+     * return the buffer oh the clocking
+     * @return clockingBuffer
+     */
+    public static List<Message> getClockingBuffer() { return clockingBuffer; }
+
+    // - - - STATIC BLOCK - - -
     /**
      * static block to restore the data in the 'buffer_pointeuse.ser' file and be able to display it afterwards
      */
@@ -115,11 +128,12 @@ public class TimeClockMMI extends Application {
         List<Message> loadBuffer = (List<Message>) Serialization.loadObject("buffer_pointeuse.ser");
         if (loadBuffer != null) //We check that the loadBuffer has been load
         {
-            bufferPointages.addAll(loadBuffer);
-            System.out.println("clocking restored : " + bufferPointages.size());
+            clockingBuffer.addAll(loadBuffer);
+            System.out.println("clocking restored : " + clockingBuffer.size());
         }
     }
 
+    // - - - METHODS - - - 
     /**
      * main for lunch the javaFx application
      * @param args : String
@@ -247,62 +261,71 @@ public class TimeClockMMI extends Application {
 
         //manage the event on the check button
         checkButton.setOnAction(event -> {
-            Employee selected = choiceEmployer.getValue(); //we recup the employee selected
-            if (selected != null) {
-                UUID idUnique = selected.getEmployeeId();
+            Employee employeeSelect = choiceEmployer.getValue(); //we recup the employee selected
+            //we check that teh employee selected is not null
+            if (employeeSelect != null)
+            {
+                UUID employeeSelectId = employeeSelect.getEmployeeId();
 
-                LocalDateTime now = LocalDateTime.now();
-                int modulo = now.getMinute() % 15;
-                int minutesToAdd = (modulo < 8) ? -modulo : (15 - modulo);
-                LocalDateTime roundedTime = now.plusMinutes(minutesToAdd).truncatedTo(ChronoUnit.MINUTES);
+                LocalDateTime timeNow = LocalDateTime.now(); //we recup the time
 
-                Message msg = new Message(idUnique, CheckType.OUT, roundedTime);
-                bufferPointages.add(msg);
-                System.out.println("Pointage enregistré pour " + selected.getFirstName());
+                //we round up the time to a quarter of an hour
+                int moduloTime = timeNow.getMinute() % 15;
+                int minutesToAdd = (moduloTime < 8) ? -moduloTime : (15 - moduloTime);
+                LocalDateTime roundTime = timeNow.plusMinutes(minutesToAdd).truncatedTo(ChronoUnit.MINUTES);
+
+                //we create a message with the class 'Message' for save the check and send to the server later
+                Message messageCheck = new Message(employeeSelectId, CheckType.OUT, roundTime);
+                clockingBuffer.add(messageCheck); //add to the buffer
+
+                System.out.println("save clocking for " + employeeSelect.getFirstName());
             }
         });
 
-        // Événement sur la liste déroulante
-        choiceEmployer.setOnAction(e -> {
+        //manage the event on the dropdown list
+        choiceEmployer.setOnAction(event -> {
             Employee employe = choiceEmployer.getValue(); //we recup the employee choose
-            if (employe != null)
+            if (employe != null) //if not null, we prevent the user in the terminal for his choice
                 System.out.println("you have chosen : " + employe.getFirstName() + " " + employe.getLastName());
         });
 
-        // JavaFX Timeline (remplace le javax.swing.Timer) exécuté chaque seconde
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
-            LocalDateTime monHeure = LocalDateTime.now();
+        //manage the event for update the display for the time round to a quarter of an hour
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
 
-            // Heure exacte
-            DateTimeFormatter formateurH = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.FRENCH);
-            labelTime.setText(monHeure.format(formateurH));
+            LocalDateTime timeNow = LocalDateTime.now(); //we recup the time
 
-            // Date exacte
-            DateTimeFormatter formateur = DateTimeFormatter.ofPattern("EEEE d MMMM, yyyy", Locale.FRENCH);
-            labelDate.setText(monHeure.format(formateur));
+            //time formatter hh:mm:ss
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.FRENCH);
+            labelTime.setText(timeNow.format(timeFormatter));
 
-            // Heure arrondie au quart d'heure
-            int modulo = monHeure.getMinute() % 15;
-            int minutesToAdd = (modulo < 8) ? -modulo : (15 - modulo);
-            LocalDateTime roundedHour = monHeure.plusMinutes(minutesToAdd).truncatedTo(ChronoUnit.MINUTES);
-            DateTimeFormatter formateurHR = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.FRENCH);
-            labelRoundHeure.setText("Comptabilisé à l'heure : " + roundedHour.format(formateurHR));
+            //exact date
+            DateTimeFormatter exactDate = DateTimeFormatter.ofPattern("EEEE d MMMM, yyyy", Locale.FRENCH);
+            labelDate.setText(timeNow.format(exactDate));
+
+            //we round up the time to a quarter of an hour
+            int moduloTime = timeNow.getMinute() % 15;
+            int minutesToAdd = (moduloTime < 8) ? -moduloTime : (15 - moduloTime);
+            LocalDateTime roundHour = timeNow.plusMinutes(minutesToAdd).truncatedTo(ChronoUnit.MINUTES);
+
+            //we formate the time to a quarter of an hour
+            DateTimeFormatter dateFormatterRoundQuarter = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.FRENCH);
+            labelRoundHeure.setText("the time at quarter of an hour is  " + roundHour.format(dateFormatterRoundQuarter));
         }));
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
 
-        // 2. Sauvegarder automatiquement à la fermeture de la fenêtre
+        //Graceful serialization saving when user closes window frame
         primaryStage.setOnCloseRequest(e -> {
-            Serialization.saveObject(new ArrayList<>(bufferPointages), "buffer_pointeuse.ser");
+            Serialization.saveObject(new ArrayList<>(clockingBuffer), "buffer_pointeuse.ser");
             System.out.println("Buffer sauvegardé avant fermeture.");
-            Platform.exit(); // Arrête proprement JavaFX
-            System.exit(0);  // Arrête le processus entier (dont le Thread d'envoi)
+            Platform.exit(); //stop JavaFx
+            System.exit(0); //stop all of the processus
         });
 
-        // Création et affichage de la scène
-        Scene scene = new Scene(root, 400, 300);
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        //Create and display the final scene
+        Scene finalScene = new Scene(root, 400, 300);
+        primaryStage.setScene(finalScene);
+        primaryStage.show(); //we display
     }
 
     private void startConfigWatcher() {
@@ -360,33 +383,44 @@ public class TimeClockMMI extends Application {
         System.out.println("Nouvelle config appliquée : " + config.getIp() + ":" + config.getPort() + " refresh=" + config.getRefreshSeconds());
     }
 
+    /**
+     * run the server for exchange the data between the time clock and the principal application.
+     * They will exchange the check for the principal application display and manage it
+     */
     private static void startThread() {
+        //we create a thread for exchange data without the principal application
         Thread threadEnvoi = new Thread(() -> {
-            while (true) {
-                try {
-                    Thread.sleep(getRefreshSeconds() * 1000L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            //while the program turn, the server turn also
+            while (true)
+            {
+                try
+                {
+                    Thread.sleep(getRefreshSeconds() * 1000L); //
+                } catch (InterruptedException error) { //we manage the potentials errors
+                    error.printStackTrace();
                     break;
                 }
 
-                if (!bufferPointages.isEmpty()) {
-                    System.out.println("Tentative d'envoi... (" + bufferPointages.size() + " message(s) en attente)");
+                //if the buffer of clocking contains clocking not sent, we send them
+                if (!clockingBuffer.isEmpty()) {
+                    System.out.println("attempt to send (There are " + clockingBuffer.size() + " message(s) waiting)");
 
-                    while (!bufferPointages.isEmpty()) {
-                        Message messageAEnvoyer = bufferPointages.get(0);
-                        try (Socket socket = new Socket(serverIp, serverPort);
-                             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream())) {
+                    //while the buffer isn't empty, we send the clocking to the principal application
+                    while (!clockingBuffer.isEmpty()) {
+                        Message messageToSend = clockingBuffer.get(0); //we recup the first message (check) of the list
+                        //try to open a server connection
+                        try (Socket socket = new Socket(serverIp, serverPort); ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream()))
+                        {
 
-                            oos.writeObject(messageAEnvoyer);
-                            oos.flush();
+                            oos.writeObject(messageToSend); //send the Check in the network with the server
+                            oos.flush(); //force sends it (just in case)
 
-                            // Succès : on retire le message
-                            bufferPointages.remove(0);
-                            System.out.println("Message envoyé au serveur !");
+                            //we remove the first element because he has been sent
+                            clockingBuffer.remove(0);
+                            System.out.println("Message sent to the server");
 
-                        } catch (Exception ex) {
-                            System.out.println("Server injoignable. Fin de la tentative, on réessayera au prochain cycle.");
+                        } catch (Exception error) {
+                            System.out.println("server unreachable. We will try it again in the next try");
                             break;
                         }
                     }
@@ -394,17 +428,8 @@ public class TimeClockMMI extends Application {
             }
         });
 
-        // Permet au Thread de s'arrêter automatiquement si l'application JavaFX se ferme
+        //Allows to the Thread to automatically stop if the JavaFX application closes
         threadEnvoi.setDaemon(true);
         threadEnvoi.start();
-    }
-
-    // Getters et Setters
-    public static List<Message> getBufferPointages() {
-        return bufferPointages;
-    }
-
-    public static void setBufferPointages(List<Message> bufferPointages) {
-        TimeClockMMI.bufferPointages = bufferPointages;
     }
 }

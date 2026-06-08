@@ -29,6 +29,11 @@ public class Server {
     private static ServerSocket serverSocket;
 
     //- - - CONSTRUCTOR - - -
+
+    /**
+     * builds a server object
+     * @param clockingManager : ClockingManager
+     */
     public Server(ClockingManager clockingManager) {
         this.clockingManager = clockingManager;
     }
