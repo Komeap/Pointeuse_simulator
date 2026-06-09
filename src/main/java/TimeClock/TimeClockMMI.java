@@ -7,6 +7,7 @@
 package TimeClock;
 
 import Check.CheckType;
+import Configuration.TimeClockConfig;
 import Employee.Employee;
 import Serveur.Message;
 import Serialization.Serialization;
@@ -52,18 +53,22 @@ public class TimeClockMMI extends Application {
     /**
      * this attribute is the IP address of server
      */
-    private static String serverIp = "localhost";
+    private static String serverIp;
 
     /**
      * this attribute is the server port
      */
-    private static int serverPort = 5005;
+    private static int serverPort;
 
     /**
      * this attribute is the time that we take for the refresh
      */
-    private static int refreshSeconds = 5;
+    private static int refreshSeconds;
 
+    /**
+     * Configuration file shared with the main application.
+     */
+    private static final String CONFIG_FILE = "timeclock_config.ser";
     // - - - SETTERS - - -
 
     /**
@@ -148,6 +153,14 @@ public class TimeClockMMI extends Application {
     @Override
     public void start(Stage primaryStage)
     {
+        TimeClockConfig config = (TimeClockConfig) Serialization.loadObject(CONFIG_FILE);
+        startConfigWatcher();
+
+        if (config != null) {
+            serverIp = config.getIp();
+            serverPort = config.getPort();
+            refreshSeconds = config.getRefreshSeconds();
+        }
         //start the thread who send the information to server.
         startThread();
 
@@ -221,51 +234,9 @@ public class TimeClockMMI extends Application {
         autoRefreshTimeline.play();
 
         Button checkButton = new Button("Check in/out");
-        //Button btnRefresh = new Button("-><-");
-        Button settingsButton = new Button("⚙");
 
-        //manage the event on the settings button
-        settingsButton.setOnAction(event -> {
 
-            Dialog<ButtonType> dialog = new Dialog<>();
-            dialog.setTitle("Server configuration");
 
-            //the input fields of the IP and the port
-            TextField ipField = new TextField(serverIp);
-            TextField portField = new TextField(String.valueOf(serverPort));
-
-            //grid for the display
-            GridPane grid = new GridPane();
-            grid.setHgap(10);
-            grid.setVgap(10);
-            grid.setPadding(new Insets(20));
-
-            grid.add(new Label("IP :"), 0, 0);
-            grid.add(ipField, 1, 0);
-
-            grid.add(new Label("Port :"), 0, 1);
-            grid.add(portField, 1, 1);
-
-            dialog.getDialogPane().setContent(grid);
-
-            //the button for save the changement
-            ButtonType saveButton = new ButtonType("Save");
-            dialog.getDialogPane().getButtonTypes().addAll(saveButton, ButtonType.CANCEL);
-
-            Optional<ButtonType> resultChange = dialog.showAndWait();
-
-            if (resultChange.isPresent() && resultChange.get() == saveButton) {
-                try { //we try to change the information port and IP with that the user enter
-                    setServerIp(ipField.getText());
-                    setServerPort(Integer.parseInt(portField.getText()));
-
-                    System.out.println("New configuration : " + serverIp + ":" + serverPort);
-
-                } catch (NumberFormatException error) { //if it's invalid, we manage the error
-                    System.out.println("Invalid port.");
-                }
-            }
-        });
 
 
         //the center pannel for the time and date display
@@ -276,15 +247,6 @@ public class TimeClockMMI extends Application {
         //add of the labels in the display
         timeDisplay.getChildren().addAll(labelDate, labelTime, labelRoundHeure);
 
-        //the top bar with parameter button
-        HBox topBar = new HBox();
-        topBar.setAlignment(Pos.TOP_RIGHT); //in the top right corner
-        topBar.setPadding(new Insets(10));
-        topBar.getChildren().add(settingsButton); //we add the settings button
-
-        //container in the center of display
-        VBox topContainer = new VBox();
-        topContainer.getChildren().addAll(topBar, timeDisplay);
 
         //bottom bar with the list and the button check
         HBox bottomBar = new HBox(15);
@@ -294,7 +256,7 @@ public class TimeClockMMI extends Application {
 
         //principal container with the top and bottom container
         BorderPane root = new BorderPane();
-        root.setCenter(topContainer);
+        root.setCenter(timeDisplay);
         root.setBottom(bottomBar);;
 
         //manage the event on the check button
@@ -366,6 +328,60 @@ public class TimeClockMMI extends Application {
         primaryStage.show(); //we display
     }
 
+    private void startConfigWatcher() {
+        Thread watcher = new Thread(() -> {
+            try {
+                java.nio.file.Path path = java.nio.file.Paths.get(CONFIG_FILE);
+                java.nio.file.Path dir = path.getParent() != null ? path.getParent() : java.nio.file.Paths.get(".");
+
+                java.nio.file.WatchService watchService = java.nio.file.FileSystems.getDefault().newWatchService();
+
+                dir.register(
+                        watchService,
+                        java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY
+                );
+
+                while (true) {
+                    java.nio.file.WatchKey key = watchService.take();
+
+                    for (java.nio.file.WatchEvent<?> event : key.pollEvents()) {
+                        java.nio.file.WatchEvent.Kind<?> kind = event.kind();
+
+                        if (kind == java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY) {
+                            String fileName = event.context().toString();
+
+                            if (fileName.equals(CONFIG_FILE)) {
+                                System.out.println("Config modifiée, rechargement...");
+
+                                TimeClockConfig newConfig =
+                                        (TimeClockConfig) Serialization.loadObject(CONFIG_FILE);
+
+                                if (newConfig != null) {
+                                    applyConfig(newConfig);
+                                }
+                            }
+                        }
+                    }
+
+                    key.reset();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        watcher.setDaemon(true);
+        watcher.start();
+    }
+
+    private void applyConfig(TimeClockConfig config) {
+        setServerIp(config.getIp());
+        setServerPort(config.getPort());
+        setRefreshSeconds(config.getRefreshSeconds());
+
+        System.out.println("Nouvelle config appliquée : " + config.getIp() + ":" + config.getPort() + " refresh=" + config.getRefreshSeconds());
+    }
 
     /**
      * run the server for exchange the data between the time clock and the principal application.

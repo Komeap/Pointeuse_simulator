@@ -6,6 +6,7 @@ package PrincipalApplication;
 
 import Check.Check;
 import Check.CheckType;
+import Configuration.TimeClockConfig;
 import Employee.Employee;
 import Entreprise.Department;
 import Serveur.Server;
@@ -37,6 +38,10 @@ public class PrincipalApplicationMMI extends Application {
      */
     private static final String DEPARTMENT_FILE = "departments.ser";
 
+    /**
+     * name of the file containing time clock configuration
+     */
+    private static final String TIMECLOCK_CONFIG_FILE = "timeclock_config.ser";
     //- - - METHODS - - -
 
     /**
@@ -73,20 +78,31 @@ public class PrincipalApplicationMMI extends Application {
         Server server = new Server(clockingManager);
         server.start();
 
+        /* ==================== TIMECLOCK CONFIGURATION ==================== */
+
+        // Loading saved time clock configuration
+        TimeClockConfig config = (TimeClockConfig) Serialization.loadObject(TIMECLOCK_CONFIG_FILE);
+
+        //Default configuration if no configuration exists.
+        if (config == null) {
+            config = new TimeClockConfig("localhost", 5005, 5);
+        }
         /* ==================== NAVBAR ==================== */
 
         // Buttons that allows the navigation between pages
         Button btnEmployee = new Button("Employee");
         Button btnCheck = new Button("Check");
         Button btnDepartment = new Button("Department");
+        Button btnParameters = new Button("Parameters");
 
         // Application of style defined in our CSS
         btnEmployee.getStyleClass().add("nav-button");
         btnCheck.getStyleClass().add("nav-button");
         btnDepartment.getStyleClass().add("nav-button");
+        btnParameters.getStyleClass().add("nav-button");
 
         // Horizontal organization of our buttons
-        HBox navbar = new HBox(15, btnEmployee, btnCheck, btnDepartment);
+        HBox navbar = new HBox(15, btnEmployee, btnCheck, btnDepartment, btnParameters);
         navbar.getStyleClass().add("navbar");
 
         /* ==================== Table Employees ==================== */
@@ -480,12 +496,75 @@ public class PrincipalApplicationMMI extends Application {
 
         pageDepartment.setPadding(new Insets(15));
 
+        /* ==================== TABLE PARAMETERS ==================== */
+
+        // Title of the parameter page
+        Label parameterTitle = new Label("Parameters");
+        parameterTitle.getStyleClass().add("page-title");
+
+        // Field containing server IP
+        TextField txtIp = new TextField(config.getIp());
+
+        // Field containing server port
+        TextField txtPort = new TextField(String.valueOf(config.getPort()));
+
+        // Field containing refresh interval
+        TextField txtRefresh = new TextField(String.valueOf(config.getRefreshSeconds()));
+
+        // Button saving configuration
+        Button btnSaveConfig = new Button("Save Configuration");
+
+
+        // Saving the configuration of the time clock.
+
+        TimeClockConfig finalConfig = config;
+        btnSaveConfig.setOnAction(e -> {
+            try {
+                finalConfig.setIp(txtIp.getText());
+                finalConfig.setPort(
+                        Integer.parseInt(txtPort.getText())
+                );
+                finalConfig.setRefreshSeconds(
+                        Integer.parseInt(txtRefresh.getText())
+                );
+                Serialization.saveObject(
+                        finalConfig,
+                        TIMECLOCK_CONFIG_FILE
+                );
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setHeaderText(null);
+                alert.setContentText("Configuration saved.");
+                alert.showAndWait();
+            } catch (NumberFormatException ex) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setHeaderText(null);
+                alert.setContentText(
+                        "Port and refresh must be integers."
+                );
+                alert.showAndWait();
+            }
+        });
+
+        VBox pageParameters = new VBox(
+                15,
+                parameterTitle,
+                new Label("Server IP"),
+                txtIp,
+                new Label("Server Port"),
+                txtPort,
+                new Label("Refresh Seconds"),
+                txtRefresh,
+                btnSaveConfig
+        );
+
+        pageParameters.setPadding(new Insets(15));
         /* ==================== NAVIGATION ==================== */
 
         // Changing the displayed page when a navigation button is clicked
         btnEmployee.setOnAction(e -> root.setCenter(pageEmployee));
         btnCheck.setOnAction(e -> root.setCenter(pagePointage));
         btnDepartment.setOnAction(e -> root.setCenter(pageDepartment));
+        btnParameters.setOnAction(e -> root.setCenter(pageParameters));
 
         // Navbar always stays at the top of the application
         root.setTop(navbar);
@@ -510,10 +589,14 @@ public class PrincipalApplicationMMI extends Application {
         btnDeleteDepartment.getStyleClass().add("action-button");
         btnModifyDepartment.getStyleClass().add("action-button");
 
+        // Applying CSS style to parameters action button
+        btnSaveConfig.getStyleClass().add("action-button");
+
         // Applying CSS style to pages
         pageEmployee.getStyleClass().add("page");
         pagePointage.getStyleClass().add("page");
         pageDepartment.getStyleClass().add("page");
+        pageParameters.getStyleClass().add("page");
 
         // Creation of the scene using the screen size
         Scene scene = new Scene(root, screenBounds.getWidth(), screenBounds.getHeight());
