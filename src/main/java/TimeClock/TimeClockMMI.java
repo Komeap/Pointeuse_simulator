@@ -69,6 +69,16 @@ public class TimeClockMMI extends Application {
      * Configuration file shared with the main application.
      */
     private static final String CONFIG_FILE = "timeclock_config.ser";
+
+    /**
+     * the auth token for "secure" TCP communication
+     * this will be developped further in the report but a hard-coded string
+     * is a good compromise when the app is intended for the staff
+     *
+     * SSL implementation would be better but we don't have enough time for that
+     * plus it's a little overkill
+     */
+    private static final String AUTH_TOKEN = "Viv3P0LYTECH2026!!!";
     // - - - SETTERS - - -
 
     /**
@@ -275,7 +285,7 @@ public class TimeClockMMI extends Application {
                 LocalDateTime roundTime = timeNow.plusMinutes(minutesToAdd).truncatedTo(ChronoUnit.MINUTES);
 
                 //we create a message with the class 'Message' for save the check and send to the server later
-                Message messageCheck = new Message(employeeSelectId, CheckType.OUT, roundTime);
+                Message messageCheck = new Message(employeeSelectId, CheckType.OUT, roundTime, AUTH_TOKEN);
                 clockingBuffer.add(messageCheck); //add to the buffer
 
                 System.out.println("save clocking for " + employeeSelect.getFirstName());
