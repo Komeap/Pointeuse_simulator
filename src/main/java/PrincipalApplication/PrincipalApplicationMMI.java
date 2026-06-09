@@ -287,8 +287,69 @@ public class PrincipalApplicationMMI extends Application {
         // Adding all columns to the table
         tablePointage.getColumns().addAll(colCheckFirstName, colCheckLastName, colCheckDept, colDate, colTime, colType);
 
-        // Linking the table with the observableList of checks
-        tablePointage.setItems(clockingManager.getClockingList());
+        // new filteredCheckList on the main data list
+        javafx.collections.transformation.FilteredList<Check> filteredCheckList =
+                new javafx.collections.transformation.FilteredList<>(clockingManager.getClockingList(), p -> true);
+
+        // linking
+        tablePointage.setItems(filteredCheckList);
+
+        // UI elements
+        ComboBox<Employee> filterEmployee = new ComboBox<>();
+        filterEmployee.setItems(employeeManager.getEmployeeList());
+        filterEmployee.setPromptText("Filtrer par employé");
+
+        ComboBox<Department> filterDepartment = new ComboBox<>();
+        filterDepartment.setItems(departments);
+        filterDepartment.setPromptText("Filtrer par département");
+
+        DatePicker filterDate = new DatePicker();
+        filterDate.setPromptText("Filtrer par date");
+
+        Button btnClearFilters = new Button("Réinitialiser");
+
+        // horizontal bar to align data
+        HBox filterBar = new HBox(10, filterEmployee, filterDepartment, filterDate, btnClearFilters);
+        filterBar.setPadding(new Insets(10, 0, 10, 0));
+
+        // filtering logic
+        Runnable updatePredicate = () -> {
+            Employee selectedEmp = filterEmployee.getValue();
+            Department selectedDept = filterDepartment.getValue();
+            LocalDate selectedDate = filterDate.getValue();
+
+            filteredCheckList.setPredicate(check -> {
+                // per employee
+                if (selectedEmp != null && !check.getEmployeeUUID().equals(selectedEmp.getEmployeeId())) {
+                    return false;
+                }
+                // per dept
+                if (selectedDept != null) {
+                    Employee emp = findEmployeeById(employeeManager.getEmployeeList(), check.getEmployeeUUID());
+                    if (emp == null || emp.getDepartment() == null || !emp.getDepartment().equals(selectedDept)) {
+                        return false;
+                    }
+                }
+                // per date
+                if (selectedDate != null && !check.getDate().isEqual(selectedDate)) {
+                    return false;
+                }
+                return true; // elt matching all active filters
+            });
+        };
+
+        // filter as soon as a value is modified
+        filterEmployee.setOnAction(e -> updatePredicate.run());
+        filterDepartment.setOnAction(e -> updatePredicate.run());
+        filterDate.setOnAction(e -> updatePredicate.run());
+
+        // empty filters button
+        btnClearFilters.setOnAction(e -> {
+            filterEmployee.setValue(null);
+            filterDepartment.setValue(null);
+            filterDate.setValue(null);
+            filteredCheckList.setPredicate(p -> true);
+        });
 
         // Custom row coloring according to employee schedule
         tablePointage.setRowFactory(tv -> new TableRow<Check>() {
@@ -371,6 +432,7 @@ public class PrincipalApplicationMMI extends Application {
         VBox pagePointage = new VBox(
                 15,
                 checkTitle,
+                filterBar,
                 checkActions,
                 tablePointage
         );

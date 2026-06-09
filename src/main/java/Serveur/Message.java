@@ -23,6 +23,8 @@ public class Message implements Serializable
     private CheckType type; /** type of check (IN or OUT) */
     private LocalDateTime date; /** date and hours of clocking */
 
+    private String securityToken; /**security token for a secured TCP */
+
     //- - - CONSTRUCTOR - - -
     /**
      * builds a Message Object
@@ -30,11 +32,12 @@ public class Message implements Serializable
      * @param checkType : CheckType
      * @param date : LocalDateTime
      */
-    public Message(UUID id, CheckType checkType, LocalDateTime date)
+    public Message(UUID id, CheckType checkType, LocalDateTime date, String sToken)
     {
         this.idEmp = id;
         this.type = checkType;
         this.date = date;
+        this.securityToken = sToken;
     }
 
     // - - - GETTERS - - -
@@ -54,4 +57,6 @@ public class Message implements Serializable
      * @return date
      */
     public LocalDateTime getDate() { return date; }
+
+    public String getSecurityToken() { return securityToken;}
 }
