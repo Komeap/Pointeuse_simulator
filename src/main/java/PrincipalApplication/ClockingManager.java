@@ -16,6 +16,9 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 public class ClockingManager implements Serializable {
 
@@ -84,6 +87,31 @@ public class ClockingManager implements Serializable {
     {
         CheckType nextType = determineNextType(employeeId, date);
         return new Check(date, time, nextType, employeeId); //we return a new check
+    }
+
+    public void importFromCSV(File file) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(";");
+                if (parts.length == 4) {
+                    UUID empId = UUID.fromString(parts[0]);
+                    LocalDate date = LocalDate.parse(parts[1]);
+                    LocalTime time = LocalTime.parse(parts[2]);
+                    CheckType type = CheckType.valueOf(parts[3].toUpperCase());
+
+                    Check newCheck = new Check(date, time, type, empId);
+                    globalHistory.add(newCheck);
+
+                    // Rafraîchissement interface JavaFX
+                    javafx.application.Platform.runLater(() -> clockingList.add(newCheck));
+                }
+            }
+            saveData(); // Sauvegarde finale
+            System.out.println("Import CSV terminé avec succès.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'import CSV : " + e.getMessage());
+        }
     }
 
     /**

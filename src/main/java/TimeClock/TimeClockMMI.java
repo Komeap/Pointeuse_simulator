@@ -163,15 +163,42 @@ public class TimeClockMMI extends Application {
     @Override
     public void start(Stage primaryStage)
     {
+        // 1. Chargement de la configuration locale
         TimeClockConfig config = (TimeClockConfig) Serialization.loadObject(CONFIG_FILE);
-        startConfigWatcher();
 
-        if (config != null) {
-            serverIp = config.getIp();
-            serverPort = config.getPort();
-            refreshSeconds = config.getRefreshSeconds();
+        // Si aucune configuration n'existe, on la crée avec un nouvel UUID
+        if (config == null) {
+            config = new TimeClockConfig(UUID.randomUUID(), "Pointeuse Entrée", "localhost", 5005, 5);
+            Serialization.saveObject(config, CONFIG_FILE);
         }
-        //start the thread who send the information to server.
+
+        // ==================== NOUVEAU : SYNCHRONISATION AU DÉMARRAGE ====================
+        // On va lire le fichier "central" du serveur pour voir s'il a été modifié par les RH
+        @SuppressWarnings("unchecked")
+        List<TimeClockConfig> serverPointeuseList = (List<TimeClockConfig>) Serialization.loadObject("liste_pointeuses.ser");
+
+        if (serverPointeuseList != null) {
+            for (TimeClockConfig serverConfig : serverPointeuseList) {
+                // Si on trouve notre UUID dans la liste du serveur, on écrase notre config locale avec la sienne !
+                if (serverConfig.getId().equals(config.getId())) {
+                    config = serverConfig;
+                    Serialization.saveObject(config, CONFIG_FILE); // On met à jour notre fichier local
+                    System.out.println("Configuration synchronisée depuis le serveur au démarrage !");
+                    break; // On a trouvé notre pointeuse, on arrête de chercher
+                }
+            }
+        }
+        // =================================================================================
+
+        // 2. Application de la bonne configuration aux variables
+        final UUID myPointeuseId = config.getId();
+        serverIp = config.getIp();
+        serverPort = config.getPort();
+        refreshSeconds = config.getRefreshSeconds();
+
+        // 3. Lancement des tâches de fond (Watcher et Thread d'envoi)
+        // C'est mieux de lancer le Watcher APRÈS la synchronisation pour éviter des bugs
+        startConfigWatcher();
         startThread();
 
         primaryStage.setTitle("Emulator Time Clock");
@@ -212,7 +239,7 @@ public class TimeClockMMI extends Application {
                 }
 
                 //Here we recup the employee selected by the user, which we will stock in a variable of type 'Employee'.
-                //This allows you to keep the employee selected even if there is a refresh. 
+                //This allows you to keep the employee selected even if there is a refresh.
                 //else, the display returns to the first employer in the list.
                 Employee sameEmployee = null;
                 for (Employee employeeInProgress : employeeList)
@@ -267,7 +294,7 @@ public class TimeClockMMI extends Application {
         //principal container with the top and bottom container
         BorderPane root = new BorderPane();
         root.setCenter(timeDisplay);
-        root.setBottom(bottomBar);;
+        root.setBottom(bottomBar);
 
         //manage the event on the check button
         checkButton.setOnAction(event -> {
@@ -275,6 +302,7 @@ public class TimeClockMMI extends Application {
             //we check that teh employee selected is not null
             if (employeeSelect != null)
             {
+
                 UUID employeeSelectId = employeeSelect.getEmployeeId();
 
                 LocalDateTime timeNow = LocalDateTime.now(); //we recup the time
@@ -285,7 +313,7 @@ public class TimeClockMMI extends Application {
                 LocalDateTime roundTime = timeNow.plusMinutes(minutesToAdd).truncatedTo(ChronoUnit.MINUTES);
 
                 //we create a message with the class 'Message' for save the check and send to the server later
-                Message messageCheck = new Message(employeeSelectId, CheckType.OUT, roundTime, AUTH_TOKEN);
+                Message messageCheck = new Message(employeeSelectId, CheckType.OUT, roundTime, AUTH_TOKEN, myPointeuseId);
                 clockingBuffer.add(messageCheck); //add to the buffer
 
                 System.out.println("save clocking for " + employeeSelect.getFirstName());

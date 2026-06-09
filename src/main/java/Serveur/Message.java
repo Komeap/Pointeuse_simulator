@@ -20,10 +20,11 @@ public class Message implements Serializable
      * attributes that we will receive from the time clock
      */
     private UUID idEmp; /** id of employee who has clocked */
-    private CheckType type; /** type of check (IN or OUT) */
-    private LocalDateTime date; /** date and hours of clocking */
+private CheckType type; /** type of check (IN or OUT) */
+private LocalDateTime date; /** date and hours of clocking */
 
-    private String securityToken; /**security token for a secured TCP */
+private String securityToken; /**security token for a secured TCP */
+private UUID pointeuseId; /**UUID for multi timeclock management */
 
     //- - - CONSTRUCTOR - - -
     /**
@@ -32,15 +33,21 @@ public class Message implements Serializable
      * @param checkType : CheckType
      * @param date : LocalDateTime
      */
-    public Message(UUID id, CheckType checkType, LocalDateTime date, String sToken)
+    public Message(UUID id, CheckType checkType, LocalDateTime date, String sToken, UUID pointeuseId)
     {
         this.idEmp = id;
         this.type = checkType;
         this.date = date;
         this.securityToken = sToken;
+        this.pointeuseId = pointeuseId;
     }
 
     // - - - GETTERS - - -
+    /**
+     * returns the pointeuseId attribute
+     * @return pointeuseId
+     */
+    public UUID getPointeuseId() { return pointeuseId; }
 
     /**
      * returns the idEmp attribute

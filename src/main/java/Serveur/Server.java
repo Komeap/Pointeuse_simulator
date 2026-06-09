@@ -8,6 +8,8 @@ package Serveur;
 
 import Check.Check;
 import PrincipalApplication.ClockingManager;
+import PrincipalApplication.EmployeeManager;
+import PrincipalApplication.PointeuseManager;
 
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
@@ -21,7 +23,8 @@ public class Server {
     //variable who allows to manage the clocking
     //'final' for that no one modify it
     private final ClockingManager clockingManager;
-
+    private final PointeuseManager pointeuseManager;
+    private  final EmployeeManager employeeManager;
     //variable server port
     //'static' because the server port it's unique and 'final' for that no one modify it
     private static final int PORT = 5005;
@@ -38,9 +41,12 @@ public class Server {
     /**
      * builds a server object
      * @param clockingManager : ClockingManager
+     * @param pointeuseManager : PointeuseManager
      */
-    public Server(ClockingManager clockingManager) {
+    public Server(ClockingManager clockingManager, PointeuseManager pointeuseManager, EmployeeManager employeeManager) {
         this.clockingManager = clockingManager;
+        this.pointeuseManager = pointeuseManager;
+        this.employeeManager = employeeManager;
     }
 
     //- - - METHOD - - -
@@ -63,7 +69,7 @@ public class Server {
                     Socket socket = serverSocket.accept();
 
                     //delegation to a thread handler
-                    threadPool.submit(new PointeuseHandler(socket, clockingManager));
+                    threadPool.submit(new PointeuseHandler(socket, clockingManager, pointeuseManager, employeeManager));
                 }
 
             } catch (Exception error) { //here, we manage the potential errors

@@ -1,6 +1,7 @@
 package Configuration;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * This class stores the configuration of the time clock.
@@ -24,17 +25,36 @@ public class TimeClockConfig implements Serializable {
     private int refreshSeconds;
 
     /**
+     * timeclock uuid
+     */
+    private UUID id;
+
+    /**
+     * timeclock name
+     */
+    private String nom;
+
+    /**
      * Constructor.
      * @param ip : String
      * @param port : int
      * @param refreshSeconds : int
      */
-    public TimeClockConfig(String ip, int port, int refreshSeconds) {
+    public TimeClockConfig(UUID id, String nom, String ip, int port, int refreshSeconds) {
+        this.id = id;
+        this.nom = nom;
         this.ip = ip;
         this.port = port;
         this.refreshSeconds = refreshSeconds;
     }
     //- - - GETTER & SETTER - - -
+
+    public UUID getId() { return id; }
+
+    public String getNom() { return nom; }
+
+    public void setNom(String name) { this.nom = nom; }
+
     public String getIp() {
         return ip;
     }

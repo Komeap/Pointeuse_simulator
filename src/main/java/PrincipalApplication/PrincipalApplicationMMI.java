@@ -29,6 +29,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.io.File;
+import javafx.stage.FileChooser;
 
 public class PrincipalApplicationMMI extends Application {
     //- - - ATTRIBUTES - - -
@@ -73,9 +75,10 @@ public class PrincipalApplicationMMI extends Application {
 
         // Manager of our employees which use our department list
         EmployeeManager employeeManager = new EmployeeManager(departments);
+        PointeuseManager pointeuseManager = new PointeuseManager();
 
         // Start of the server
-        Server server = new Server(clockingManager);
+        Server server = new Server(clockingManager, pointeuseManager, employeeManager);
         server.start();
 
         /* ==================== TIMECLOCK CONFIGURATION ==================== */
@@ -85,7 +88,7 @@ public class PrincipalApplicationMMI extends Application {
 
         //Default configuration if no configuration exists.
         if (config == null) {
-            config = new TimeClockConfig("localhost", 5005, 5);
+            config = new TimeClockConfig(UUID.randomUUID(), "Pointeuse Par Défaut", "localhost", 5005, 5);
         }
         /* ==================== NAVBAR ==================== */
 
@@ -425,6 +428,21 @@ public class PrincipalApplicationMMI extends Application {
             clockingManager.deleteClocking(selection);
         });
 
+        Button btnImportCSV = new Button("Importer CSV");
+        btnImportCSV.getStyleClass().add("action-button");
+
+        btnImportCSV.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+            File selectedFile = fileChooser.showOpenDialog(stage);
+
+            if (selectedFile != null) {
+                clockingManager.importFromCSV(selectedFile);
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "Importation terminée.");
+                alert.show();
+            }
+        });
+
         // Title of the check page
         Label checkTitle = new Label("Check");
         checkTitle.getStyleClass().add("page-title");
@@ -434,7 +452,8 @@ public class PrincipalApplicationMMI extends Application {
                 checkTitle,
                 filterBar,
                 checkActions,
-                tablePointage
+                tablePointage,
+                btnImportCSV
         );
 
         pagePointage.setPadding(new Insets(15));
@@ -560,65 +579,110 @@ public class PrincipalApplicationMMI extends Application {
 
         /* ==================== TABLE PARAMETERS ==================== */
 
-        // Title of the parameter page
-        Label parameterTitle = new Label("Parameters");
+        /* ==================== TABLE PARAMETERS ==================== */
+
+        // Title label for the parameters section
+        Label parameterTitle = new Label("Paramètres des Pointeuses");
         parameterTitle.getStyleClass().add("page-title");
 
-        // Field containing server IP
-        TextField txtIp = new TextField(config.getIp());
+        // Table view to display all connected time clocks (read-only list populated by the network)
+        TableView<TimeClockConfig> tablePointeuses = new TableView<>();
 
-        // Field containing server port
-        TextField txtPort = new TextField(String.valueOf(config.getPort()));
+        // Column for the time clock UUID
+        TableColumn<TimeClockConfig, String> colUUID = new TableColumn<>("UUID (Identifiant)");
+        colUUID.setCellValueFactory(new PropertyValueFactory<>("id"));
 
-        // Field containing refresh interval
-        TextField txtRefresh = new TextField(String.valueOf(config.getRefreshSeconds()));
+        // Column for the time clock human-readable name
+        TableColumn<TimeClockConfig, String> colNomPointeuse = new TableColumn<>("Nom (RH)");
+        colNomPointeuse.setCellValueFactory(new PropertyValueFactory<>("nom"));
 
-        // Button saving configuration
-        Button btnSaveConfig = new Button("Save Configuration");
+        tablePointeuses.getColumns().addAll(colUUID, colNomPointeuse);
+        tablePointeuses.setItems(pointeuseManager.getPointeuseList()); // Bind table to the observable list
+        tablePointeuses.setPrefHeight(200);
+        tablePointeuses.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+        // Form fields for modifying the selected time clock's configuration
+        TextField txtNom = new TextField();
+        TextField txtIp = new TextField();
+        TextField txtPort = new TextField();
+        TextField txtRefresh = new TextField();
 
-        // Saving the configuration of the time clock.
+        // Disable text fields by default until a time clock is selected in the table
+        txtNom.setDisable(true); txtIp.setDisable(true);
+        txtPort.setDisable(true); txtRefresh.setDisable(true);
 
-        TimeClockConfig finalConfig = config;
-        btnSaveConfig.setOnAction(e -> {
-            try {
-                finalConfig.setIp(txtIp.getText());
-                finalConfig.setPort(
-                        Integer.parseInt(txtPort.getText())
-                );
-                finalConfig.setRefreshSeconds(
-                        Integer.parseInt(txtRefresh.getText())
-                );
-                Serialization.saveObject(
-                        finalConfig,
-                        TIMECLOCK_CONFIG_FILE
-                );
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setHeaderText(null);
-                alert.setContentText("Configuration saved.");
-                alert.showAndWait();
-            } catch (NumberFormatException ex) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setHeaderText(null);
-                alert.setContentText(
-                        "Port and refresh must be integers."
-                );
-                alert.showAndWait();
+        // Save button to apply changes
+        Button btnSaveConfig = new Button("Sauvegarder Configuration");
+        btnSaveConfig.setDisable(true); // Disabled by default
+        btnSaveConfig.getStyleClass().add("action-button");
+
+        // Selection listener on the table to populate and enable the form fields
+        tablePointeuses.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                // Enable form fields when an item is selected
+                txtNom.setDisable(false); txtIp.setDisable(false);
+                txtPort.setDisable(false); txtRefresh.setDisable(false);
+                btnSaveConfig.setDisable(false);
+
+                // Populate text fields with the selected time clock's data
+                txtNom.setText(newSel.getNom());
+                txtIp.setText(newSel.getIp());
+                txtPort.setText(String.valueOf(newSel.getPort()));
+                txtRefresh.setText(String.valueOf(newSel.getRefreshSeconds()));
             }
         });
 
+        // Action event for the save button to update the configuration
+        btnSaveConfig.setOnAction(e -> {
+            TimeClockConfig selected = tablePointeuses.getSelectionModel().getSelectedItem();
+            if (selected != null) {
+                try {
+                    // Update object attributes with form inputs
+                    selected.setNom(txtNom.getText());
+                    selected.setIp(txtIp.getText());
+                    selected.setPort(Integer.parseInt(txtPort.getText()));
+                    selected.setRefreshSeconds(Integer.parseInt(txtRefresh.getText()));
+
+                    tablePointeuses.refresh(); // Visually refresh the table to show new name
+                    pointeuseManager.saveData(); // Save data to the serialized file
+
+                    // save for timeclocks
+                    Serialization.saveObject(selected, "timeclock_config.ser");
+
+                    // Show success confirmation dialog
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setHeaderText(null);
+                    alert.setContentText("Configuration de la pointeuse mise à jour.");
+                    alert.showAndWait();
+                } catch (NumberFormatException ex) {
+                    // Show error dialog if port or refresh rate are not valid integers
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setHeaderText(null);
+                    alert.setContentText("Erreur: Le port et le délai de rafraîchissement doivent être des nombres entiers.");
+                    alert.showAndWait();
+                }
+            }
+        });
+
+        // Container to properly align the form interface
+        VBox formContainer = new VBox(10,
+                new Label("Nom de la pointeuse :"), txtNom,
+                new Label("IP du serveur cible :"), txtIp,
+                new Label("Port du serveur :"), txtPort,
+                new Label("Fréquence de rafraîchissement (sec) :"), txtRefresh
+        );
+        formContainer.setPadding(new Insets(10, 0, 10, 0));
+
+        // Main layout container for the Parameters page
         VBox pageParameters = new VBox(
                 15,
                 parameterTitle,
-                new Label("Server IP"),
-                txtIp,
-                new Label("Server Port"),
-                txtPort,
-                new Label("Refresh Seconds"),
-                txtRefresh,
+                tablePointeuses,
+                new Separator(),
+                new Label("Modifier la pointeuse sélectionnée :"),
+                formContainer,
                 btnSaveConfig
         );
-
         pageParameters.setPadding(new Insets(15));
         /* ==================== NAVIGATION ==================== */
 
