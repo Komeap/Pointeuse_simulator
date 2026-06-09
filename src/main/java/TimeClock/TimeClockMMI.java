@@ -110,8 +110,8 @@ public class TimeClockMMI extends Application {
     }
 
     /**
-     * it's the setter for the rclocking buffer
-     * @param clockingBuffer : List<Message>
+     * it's the setter for the clocking buffer
+     * @param clockingBuffer : List< Message>
      */
     public static void setClockingBuffer(List<Message> clockingBuffer) { TimeClockMMI.clockingBuffer = clockingBuffer; }
 

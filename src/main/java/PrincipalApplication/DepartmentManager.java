@@ -84,7 +84,7 @@ public class DepartmentManager {
     /**
      * Removes a department and removes its reference from employees
      * @param dep : Department
-     * @param employees : ObservableList<Employee>
+     * @param employees : ObservableList< Employee>
      */
     public void deleteDepartment(Department dep, ObservableList<Employee> employees) {
         //check if dep is null -> safety check
