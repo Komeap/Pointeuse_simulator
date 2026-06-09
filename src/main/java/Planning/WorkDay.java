@@ -9,29 +9,39 @@ import java.time.LocalTime;
  */
 public class WorkDay implements Serializable {
 
-    // The time the employee starts working
-    private LocalTime startTime;
+    private LocalTime startTime; /** Start time of the shift */
+    private LocalTime endTime; /** End time of the shift */
 
-    // The time the employee finishes working
-    private LocalTime endTime;
-
-    // Constructor: initializes the shift with a specific start and end time
+    /**
+     * builds a workday object with start and end times
+     * @param startTime : LocalTime
+     * @param endTime : LocalTime
+     */
     public WorkDay(LocalTime startTime, LocalTime endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
-    // Returns the start time of the shift
+    /**
+     * returns the start time of the shift
+     * @return startTime : LocalTime
+     */
     public LocalTime getStartTime() {
         return startTime;
     }
 
-    // Returns the end time of the shift
+    /**
+     * returns the end time of the shift
+     * @return endTime : LocalTime
+     */
     public LocalTime getEndTime() {
         return endTime;
     }
 
-    // Formats the working hours as a string (for example "08:00 -> 17:00")
+    /**
+     * returns a String  used for a correct display of the working hours.
+     * @return formatted representation of the shift hours : String
+     */
     @Override
     public String toString() {
         return startTime + " -> " + endTime;

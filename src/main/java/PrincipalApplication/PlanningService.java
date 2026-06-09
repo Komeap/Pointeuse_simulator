@@ -15,12 +15,16 @@ import java.time.DayOfWeek;
 public class PlanningService {
 
     /**
-     * Loads and displays the visual schedule of an employee for a specific day.
+     * loads and displays the visual schedule bar of an employee for a specific day
+     * @param bar : HBox
+     * @param labelInfo : Label
+     * @param emp : Employee
+     * @param day : DayOfWeek
      */
     public void loadSchedule(HBox bar, Label labelInfo, Employee emp, DayOfWeek day) {
         if (emp != null && emp.getPlanning() != null) {
 
-            // Clear the previous visual bar
+            //we clear the previous visual bar
             bar.getChildren().clear();
             bar.setSpacing(2);
 
@@ -28,20 +32,20 @@ public class PlanningService {
 
             if (wd != null && wd.getStartTime() != null && wd.getEndTime() != null) {
 
-                // Calculate grid indexes (1 hour = 4 blocks of 15 mins, so 24h = 96 rectangles)
+                // We calculate grid indexes (1 hour = 4 blocks of 15 mins, so 24h = 96 rectangles)
                 int start = wd.getStartTime().getHour() * 4 + (wd.getStartTime().getMinute() / 15);
                 int end = wd.getEndTime().getHour() * 4 + (wd.getEndTime().getMinute() / 15);
 
-                // Create the 96 rectangles to represent the whole day
+                // We create the 96 rectangles to represent the whole day
                 for (int i = 0; i < 96; i++) {
                     Rectangle r = new Rectangle(12, 25);
 
-                    // Color the rectangle blue if it's working time, otherwise gray
+                    // We color the rectangle blue if it's working time, otherwise gray
                     r.setFill((i >= start && i < end) ? Color.CORNFLOWERBLUE : Color.LIGHTGRAY);
                     bar.getChildren().add(r);
                 }
 
-                // Update the information text
+                // we update the information text
                 labelInfo.setText("Schedule for " + day + " for " + emp.getFirstName() + ": " + wd.getStartTime() + " - " + wd.getEndTime());
             } else {
                 bar.getChildren().clear();
