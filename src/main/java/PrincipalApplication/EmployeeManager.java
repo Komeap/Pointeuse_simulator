@@ -412,30 +412,32 @@ public class EmployeeManager {
     }
 
     /**
-     * creates schedule UI panel for each day of week
-     * @param cbDays : CheckBox[]
-     * @param cbStart : ComboBox<LocalTime>[]
-     * @param cbEnd : ComboBox<LocalTime>[]
-     * @param label : Label
-     * @param basePlanning : Planning.Planning
-     * @return ...
+     * Creates the UI panel to configure the schedule for each day of the week.
+     * @param cbDays Array of CheckBoxes to enable/disable days.
+     * @param cbStart Array of ComboBoxes for start times.
+     * @param cbEnd Array of ComboBoxes for end times.
+     * @param label The label displaying the total calculated hours.
+     * @param basePlanning The existing planning to load or a default one.
+     * @return A VBox containing the full schedule configuration interface.
      */
     private VBox createSchedulePanel(CheckBox[] cbDays, ComboBox<LocalTime>[] cbStart, ComboBox<LocalTime>[] cbEnd, Label label, Planning.Planning basePlanning)
     {
 
-        // setup the main container and the grid for the schedule rows
+        //to setup the main container and add the section title
         VBox vbox = new VBox(10);
         vbox.getChildren().add(
                 new Label("Weekly Schedule Configuration:")
         );
 
+        // we setup the grid that will align the days and dropdowns perfectly
         GridPane grid = new GridPane();
         grid.setHgap(15);
         grid.setVgap(5);
 
+        // we retrieve the official Java enumeration of the 7 days of the week
         DayOfWeek[] daysArr = DayOfWeek.values();
 
-        // generate a list of times in 15-minute increments (00:00, 00:15, etc.)
+        //we generate a list of times in 15 minute increments (00:00, 00:15, etc.)so it covers all the day
         List<LocalTime> times = new ArrayList<>();
         for (int h = 0; h <= 23; h++) {
             times.add(LocalTime.of(h, 0));
@@ -444,7 +446,7 @@ public class EmployeeManager {
             times.add(LocalTime.of(h, 45));
         }
 
-        // loop through each day of the week to create its configuration row
+        //we loop through each day of the week to create its configuration row
         for (int i = 0; i < 7; i++) {
 
             DayOfWeek currentDay = daysArr[i];
@@ -453,7 +455,8 @@ public class EmployeeManager {
             cbDays[i] = new CheckBox(
                     capitalize(currentDay.toString())
             );
-
+            // we wrap the times in an observable list so the UI updates automatically
+            cbStart[i] = new ComboBox<>(FXCollections.observableArrayList(times));
             cbStart[i] =
                     new ComboBox<>(FXCollections.observableArrayList(times));
 
@@ -464,36 +467,41 @@ public class EmployeeManager {
             cbStart[i].setDisable(true);
             cbEnd[i].setDisable(true);
 
-            // if the employee already has a schedule, pre-select the correct times
-            if (basePlanning != null &&
-                    basePlanning.getWorkDay(currentDay) != null) {
+            // we check if a schedule exists for this employee and if they work on this specific day
+            if (basePlanning != null && basePlanning.getWorkDay(currentDay) != null) {
 
-                Planning.WorkDay wd =
-                        basePlanning.getWorkDay(currentDay);
+                //we extract the working hours saved for this specific day
+                Planning.WorkDay wd = basePlanning.getWorkDay(currentDay);
 
-                if (wd.getStartTime() != null &&
-                        wd.getEndTime() != null) {
+                // we check that both start and end times are properly defined in the memory
+                if (wd.getStartTime() != null && wd.getEndTime() != null) {
 
+                    // watch check the box to indicate the employee works on this day
                     cbDays[i].setSelected(true);
+
+                    // preselect the saved start and end times in the dropdown menus
                     cbStart[i].setValue(wd.getStartTime());
                     cbEnd[i].setValue(wd.getEndTime());
 
+                    // unlock the dropdown menus so the user can actually interact with them
                     cbStart[i].setDisable(false);
                     cbEnd[i].setDisable(false);
                 }
             }
 
+            //we freeze the current loop iteration number into a constant
+            // because this is required by Java to use the index inside the lambda events below
             final int index = i;
 
-            // add a listener to enable/disable dropdowns when a day is checked
+            // we add a listener to enable/disable dropdowns when a day is checked
             cbDays[i].setOnAction(e -> {
 
+                // we check if it is checked or not
                 boolean checked = cbDays[index].isSelected();
-
                 cbStart[index].setDisable(!checked);
                 cbEnd[index].setDisable(!checked);
 
-                // set default working hours if none were previously selected
+                //we set default working hours (9h-17h) if none were previously selected
                 if (checked && cbStart[index].getValue() == null)
                     cbStart[index].setValue(LocalTime.of(9, 0));
 
@@ -512,14 +520,14 @@ public class EmployeeManager {
                     e -> calculateHourTotal(cbDays, cbStart, cbEnd, label)
             );
 
-            // add the day's components to the grid
+            // add the day's components to the grid in its right emplacement
             grid.add(cbDays[i], 0, i);
             grid.add(cbStart[i], 1, i);
             grid.add(new Label("to"), 2, i);
             grid.add(cbEnd[i], 3, i);
         }
 
-        // calculate the initial total before displaying the panel
+        // wz calculate the initial total before displaying the panel
         calculateHourTotal(cbDays, cbStart, cbEnd, label);
 
         vbox.getChildren().addAll(grid, label);
@@ -537,7 +545,7 @@ public class EmployeeManager {
 
         int totalMinutes = 0;
 
-        // loop through all 7 days to sum the working minutes
+        // we loop through all 7 days to sum the working minutes
         for (int i = 0; i < 7; i++) {
 
             if (cbDays[i].isSelected()
@@ -547,19 +555,19 @@ public class EmployeeManager {
                 LocalTime start = cbStart[i].getValue();
                 LocalTime end = cbEnd[i].getValue();
 
-                // convert start and end times to minutes for easier calculation
+                // we convert start and end times to minutes (because it's easier)
                 int startMins =
                         start.getHour() * 60 + start.getMinute();
 
                 int endMins =
                         end.getHour() * 60 + end.getMinute();
 
-                // handle the edge case where a shift ends exactly at midnight
+                //we manage the edge case where a shift ends at midnight
                 if (endMins == 0) {
                     endMins = 24 * 60;
                 }
 
-                // only add to the total if the time range is logical
+                // only add to the total if the time range is logical (we cannot finish at 9AM if we start at 10AM for example)
                 if (endMins > startMins) {
                     totalMinutes += (endMins - startMins);
                 }
@@ -591,7 +599,7 @@ public class EmployeeManager {
                 LocalTime start = cbStart[i].getValue();
                 LocalTime end = cbEnd[i].getValue();
 
-                // block the save process if a checked day has missing times
+                // block the save process if a checked day has missing times (because to calculate we need times)
                 if (start == null || end == null) {
                     showError("Schedule Error",
                             "Times missing for "
@@ -606,10 +614,10 @@ public class EmployeeManager {
                         end.getHour() * 60 + end.getMinute();
 
                 if (endMins == 0) {
-                    endMins = 24 * 60;
+                    endMins = 24 * 60; //same as previously (midnight problem)
                 }
 
-                // block the save process if the end time is before the start time
+                // we block the save process if the end time is before the start time
                 if (endMins <= startMins) {
                     showError("Schedule Error",
                             "On "
@@ -623,26 +631,40 @@ public class EmployeeManager {
     }
 
     /**
-     * show error alert popup
-     * @param title : String
-     * @param message : String
+     * Displays a standardized error popup to the user.
+     * @param title   The title of the error window (ex "Schedule Error")
+     * @param message The detailed error description to display to the user
      */
     private void showError(String title, String message) {
+
+        // we create a preconfigured JavaFX error dialog (includes the red X icon)
         Alert alert = new Alert(Alert.AlertType.ERROR);
+
         alert.setTitle(title);
+
+        // we remove the default header to have cleaner UI look
         alert.setHeaderText(null);
+
         alert.setContentText(message);
+
+        // we display the popup and block the application until the user clicks OK
         alert.showAndWait();
     }
 
     /**
-     * capitalize first letter of a string (used for days display)
-     * @param text : String
-     * @return ...
+     * Capitalizes the first letter of a string and makes the rest lowercase.
+     * Used to format the official Java days (ex "MONDAY" -> "Monday").
+     * * @param text The raw string to be formatted
+     * @return The formatted string, or the original text if it's null/empty
      */
     private String capitalize(String text) {
-        if (text == null || text.isEmpty()) return text;
-        return text.substring(0, 1).toUpperCase()
-                + text.substring(1).toLowerCase();
+
+        // we prevent crashes if the input text is null or empty
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+
+        //we  extract the first letter uppercase it and append the rest in lowercase
+        return text.substring(0, 1).toUpperCase() + text.substring(1).toLowerCase();
     }
 }
