@@ -39,7 +39,7 @@ public class EmployeeManager {
 
     /**
      *  Initializes employee list and loads saved data if available
-     * @param departments : List< Department>
+     * @param departments : List Department
      */
     public EmployeeManager(List<Department> departments) {
         this.employeeList = FXCollections.observableArrayList();
