@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * This class is charged to manage our timeclock.
+ */
 public class TimeClockManager {
     private ObservableList<TimeClockConfig> pointeuseList;
     private static final String FILE_NAME = "liste_pointeuses.ser";
