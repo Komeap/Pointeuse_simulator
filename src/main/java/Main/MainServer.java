@@ -1,18 +1,19 @@
-/**
- * This class 'MainServer' allows to create and lunch the server.
- */
+package Main;
 
 import Entreprise.Department;
 import PrincipalApplication.EmployeeManager;
 import Serialization.Serialization;
 import Serveur.Server;
 import PrincipalApplication.ClockingManager;
-import PrincipalApplication.PointeuseManager;
+import PrincipalApplication.TimeClockManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.List;
 
+/**
+ * This class 'MainServer' allows to create and launch the server.
+ */
 public class MainServer
 {
     // - - - MAIN - - -
@@ -24,7 +25,7 @@ public class MainServer
 
         //We create an object from the 'ClockingManager' class to be able to launch the server
         ClockingManager clockingManager = new ClockingManager();
-        PointeuseManager pointeuseManager = new PointeuseManager();
+        TimeClockManager timeClockManager = new TimeClockManager();
         ObservableList<Department> departments = FXCollections.observableArrayList();
 
         // Loading of previously saved departments
@@ -38,7 +39,7 @@ public class MainServer
         // Manager of our employees which use our department list
         EmployeeManager employeeManager = new EmployeeManager(departments);
         //We instantiate the server
-        Server myServer = new Server(clockingManager, pointeuseManager, employeeManager);
+        Server myServer = new Server(clockingManager, timeClockManager, employeeManager);
 
         //we start the server
         myServer.start();

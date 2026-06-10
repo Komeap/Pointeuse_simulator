@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class PointeuseManager {
+public class TimeClockManager {
     private ObservableList<TimeClockConfig> pointeuseList;
     private static final String FILE_NAME = "liste_pointeuses.ser";
 
-    public PointeuseManager() {
+    public TimeClockManager() {
         pointeuseList = FXCollections.observableArrayList();
         @SuppressWarnings("unchecked")
         List<TimeClockConfig> loaded = (List<TimeClockConfig>) Serialization.loadObject(FILE_NAME);

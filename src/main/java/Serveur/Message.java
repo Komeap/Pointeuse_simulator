@@ -1,8 +1,3 @@
-/**
- * This Message class allows you to stock the information received from a clocking
- * by the time clock on the server.
- */
-
 package Serveur;
 
 import Check.CheckType;
@@ -11,6 +6,10 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * This Message class allows you to stock the information received from a clocking
+ * by the time clock on the server.
+ */
 public class Message implements Serializable
 {
     //private static final long serialVersionUID = 1L;

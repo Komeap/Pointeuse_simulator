@@ -1,7 +1,3 @@
-/**
- * The 'Employee' class represents a single employee in the system.
- * It stocks information related to this employee.
- */
 package Employee;
 
 import Entreprise.Department;
@@ -10,6 +6,10 @@ import Planning.Planning;
 import java.util.UUID;
 import java.io.Serializable;
 
+/**
+ * The 'Employee' class represents a single employee in the system.
+ * It stocks information related to this employee.
+ */
 public class Employee implements Serializable{
 
 	//- - - ATTRIBUTES - - -

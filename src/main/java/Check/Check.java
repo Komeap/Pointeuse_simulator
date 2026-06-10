@@ -1,8 +1,3 @@
-/**
- * The 'Check' class represents a single check in the system.
- * It stocks information related to this check.
- */
-
 package Check;
 
 import java.io.Serial;
@@ -12,6 +7,10 @@ import java.time.LocalTime;
 import java.util.UUID;
 import java.util.Objects;
 
+/**
+ * The 'Check' class represents a single check in the system.
+ * It stocks information related to this check.
+ */
 public class Check implements Serializable
 {
 	@Serial

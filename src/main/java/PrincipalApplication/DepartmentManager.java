@@ -1,7 +1,3 @@
-/**
- * The 'DepartmentManager' class allows you to manipulate a list to display your department in your principal interface.
- * It also contains all the function to add/remove/modify a department.
- */
 package PrincipalApplication;
 
 import Employee.Employee;
@@ -14,6 +10,10 @@ import javafx.scene.control.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The 'DepartmentManager' class allows you to manipulate a list to display your department in your principal interface.
+ * It also contains all the function to add/remove/modify a department.
+ */
 public class DepartmentManager {
 
     //- - - ATTRIBUTES - - -

@@ -1,7 +1,3 @@
-/**
- * The class 'Department' allows to manage a department with his name et his list employees. We can add or delete employee in this list.
- */
-
 package Entreprise;
 
 import Employee.Employee;
@@ -9,6 +5,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The class 'Department' allows to manage a department with his name et his list employees. We can add or delete employee in this list.
+ */
 public class Department implements Serializable{
 
 	//- - - ATTRIBUTES - - -

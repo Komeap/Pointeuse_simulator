@@ -1,29 +1,27 @@
-/**
- * This class is used to launch the server on listen to receive the clocking
- * from the time clock and save them so that they can be displayed later
- * with the help of other classes.
- */
 
 package Serveur;
 
-import Check.Check;
 import PrincipalApplication.ClockingManager;
 import PrincipalApplication.EmployeeManager;
-import PrincipalApplication.PointeuseManager;
+import PrincipalApplication.TimeClockManager;
 
-import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * This class is used to launch the server on listen to receive the clocking
+ * from the time clock and save them so that they can be displayed later
+ * with the help of other classes.
+ */
 public class Server {
 
     //- - - ATTRIBUTES - - -
     //variable who allows to manage the clocking
     //'final' for that no one modify it
     private final ClockingManager clockingManager;
-    private final PointeuseManager pointeuseManager;
+    private final TimeClockManager timeClockManager;
     private  final EmployeeManager employeeManager;
     //variable server port
     //'static' because the server port it's unique and 'final' for that no one modify it
@@ -41,11 +39,11 @@ public class Server {
     /**
      * builds a server object
      * @param clockingManager : ClockingManager
-     * @param pointeuseManager : PointeuseManager
+     * @param timeClockManager : PointeuseManager
      */
-    public Server(ClockingManager clockingManager, PointeuseManager pointeuseManager, EmployeeManager employeeManager) {
+    public Server(ClockingManager clockingManager, TimeClockManager timeClockManager, EmployeeManager employeeManager) {
         this.clockingManager = clockingManager;
-        this.pointeuseManager = pointeuseManager;
+        this.timeClockManager = timeClockManager;
         this.employeeManager = employeeManager;
     }
 
@@ -69,7 +67,7 @@ public class Server {
                     Socket socket = serverSocket.accept();
 
                     //delegation to a thread handler
-                    threadPool.submit(new PointeuseHandler(socket, clockingManager, pointeuseManager, employeeManager));
+                    threadPool.submit(new TimeClockHandler(socket, clockingManager, timeClockManager, employeeManager));
                 }
 
             } catch (Exception error) { //here, we manage the potential errors

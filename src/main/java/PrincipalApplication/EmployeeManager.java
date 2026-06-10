@@ -1,8 +1,3 @@
-/**
- * The 'EmployeeManager' class manages a list to display your employee in your principal interface.
- * It provides all the necessary functions to add, modify and delete employees, as well as manage their department
- * assignment and weekly planning, while ensuring data persistence through serialization.
- */
 package PrincipalApplication;
 
 import Employee.Employee;
@@ -22,6 +17,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * The 'EmployeeManager' class manages a list to display your employee in your principal interface.
+ * It provides all the necessary functions to add, modify and delete employees, as well as manage their department
+ * assignment and weekly planning, while ensuring data persistence through serialization.
+ */
 public class EmployeeManager {
 
     // - - - ATTRIBUTES - - -

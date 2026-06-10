@@ -3,24 +3,24 @@ package Serveur;
 import Check.Check;
 import PrincipalApplication.ClockingManager;
 import PrincipalApplication.EmployeeManager;
-import PrincipalApplication.PointeuseManager;
+import PrincipalApplication.TimeClockManager;
 
 import java.io.ObjectInputStream;
 import java.net.Socket;
 
-class PointeuseHandler implements Runnable {
+class TimeClockHandler implements Runnable {
 
     private final Socket socket;
     private final ClockingManager clockingManager;
-    private final PointeuseManager pointeuseManager;
+    private final TimeClockManager timeClockManager;
     private final EmployeeManager employeeManager;
     private static final String EXPECTED_TOKEN = "Viv3P0LYTECH2026!!!";
 
     // setting up timeclock handler
-    public PointeuseHandler(Socket socket, ClockingManager clockingManager, PointeuseManager pointeuseManager, EmployeeManager employeeManager) {
+    public TimeClockHandler(Socket socket, ClockingManager clockingManager, TimeClockManager timeClockManager, EmployeeManager employeeManager) {
         this.socket = socket;
         this.clockingManager = clockingManager;
-        this.pointeuseManager = pointeuseManager;
+        this.timeClockManager = timeClockManager;
         this.employeeManager = employeeManager;
     }
 
@@ -48,7 +48,7 @@ class PointeuseHandler implements Runnable {
             }
 
             // NOUVEAU : On enregistre la pointeuse si elle n'existe pas encore dans notre fichier
-            pointeuseManager.registerPointeuseIfNotExists(messageReceived.getPointeuseId());
+            timeClockManager.registerPointeuseIfNotExists(messageReceived.getPointeuseId());
 
             // We calcul automatically if the check is IN or OUT
             Check newCheck = clockingManager.createAutomaticClocking(

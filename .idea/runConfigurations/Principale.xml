@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Principale" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="MainPrincipal" />
+    <option name="MAIN_CLASS_NAME" value="Main.MainPrincipal" />
     <module name="Pointeuse.main" />
     <method v="2">
       <option name="Make" enabled="true" />

@@ -1,7 +1,3 @@
-/**
- * The 'PrincipalApplicationMMI' is the main interface. It allows us to see our list of employee, check and department.
- * We can add, modify or delete our employee and department. We can also modify all of the check.
- */
 package PrincipalApplication;
 
 import Check.Check;
@@ -32,6 +28,10 @@ import java.util.UUID;
 import java.io.File;
 import javafx.stage.FileChooser;
 
+/**
+ * The 'PrincipalApplicationMMI' is the main interface. It allows us to see our list of employee, check and department.
+ * We can add, modify or delete our employee and department. We can also modify all of the check.
+ */
 public class PrincipalApplicationMMI extends Application {
     //- - - ATTRIBUTES - - -
 
@@ -75,10 +75,10 @@ public class PrincipalApplicationMMI extends Application {
 
         // Manager of our employees which use our department list
         EmployeeManager employeeManager = new EmployeeManager(departments);
-        PointeuseManager pointeuseManager = new PointeuseManager();
+        TimeClockManager timeClockManager = new TimeClockManager();
 
         // Start of the server
-        Server server = new Server(clockingManager, pointeuseManager, employeeManager);
+        Server server = new Server(clockingManager, timeClockManager, employeeManager);
         server.start();
 
         /* ==================== TIMECLOCK CONFIGURATION ==================== */
@@ -579,40 +579,38 @@ public class PrincipalApplicationMMI extends Application {
 
         /* ==================== TABLE PARAMETERS ==================== */
 
-        /* ==================== TABLE PARAMETERS ==================== */
-
         // Title label for the parameters section
-        Label parameterTitle = new Label("Paramètres des Pointeuses");
+        Label parameterTitle = new Label("TimeClock Parameters");
         parameterTitle.getStyleClass().add("page-title");
 
         // Table view to display all connected time clocks (read-only list populated by the network)
         TableView<TimeClockConfig> tablePointeuses = new TableView<>();
 
         // Column for the time clock UUID
-        TableColumn<TimeClockConfig, String> colUUID = new TableColumn<>("UUID (Identifiant)");
+        TableColumn<TimeClockConfig, String> colUUID = new TableColumn<>("UUID (Identifier)");
         colUUID.setCellValueFactory(new PropertyValueFactory<>("id"));
 
         // Column for the time clock human-readable name
-        TableColumn<TimeClockConfig, String> colNomPointeuse = new TableColumn<>("Nom (RH)");
-        colNomPointeuse.setCellValueFactory(new PropertyValueFactory<>("nom"));
+        TableColumn<TimeClockConfig, String> colNomPointeuse = new TableColumn<>("Name");
+        colNomPointeuse.setCellValueFactory(new PropertyValueFactory<>("neame"));
 
         tablePointeuses.getColumns().addAll(colUUID, colNomPointeuse);
-        tablePointeuses.setItems(pointeuseManager.getPointeuseList()); // Bind table to the observable list
+        tablePointeuses.setItems(timeClockManager.getPointeuseList()); // Bind table to the observable list
         tablePointeuses.setPrefHeight(200);
         tablePointeuses.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         // Form fields for modifying the selected time clock's configuration
-        TextField txtNom = new TextField();
+        TextField txtName = new TextField();
         TextField txtIp = new TextField();
         TextField txtPort = new TextField();
         TextField txtRefresh = new TextField();
 
         // Disable text fields by default until a time clock is selected in the table
-        txtNom.setDisable(true); txtIp.setDisable(true);
+        txtName.setDisable(true); txtIp.setDisable(true);
         txtPort.setDisable(true); txtRefresh.setDisable(true);
 
         // Save button to apply changes
-        Button btnSaveConfig = new Button("Sauvegarder Configuration");
+        Button btnSaveConfig = new Button("Save configuration");
         btnSaveConfig.setDisable(true); // Disabled by default
         btnSaveConfig.getStyleClass().add("action-button");
 
@@ -620,12 +618,12 @@ public class PrincipalApplicationMMI extends Application {
         tablePointeuses.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
                 // Enable form fields when an item is selected
-                txtNom.setDisable(false); txtIp.setDisable(false);
+                txtName.setDisable(false); txtIp.setDisable(false);
                 txtPort.setDisable(false); txtRefresh.setDisable(false);
                 btnSaveConfig.setDisable(false);
 
                 // Populate text fields with the selected time clock's data
-                txtNom.setText(newSel.getNom());
+                txtName.setText(newSel.getNom());
                 txtIp.setText(newSel.getIp());
                 txtPort.setText(String.valueOf(newSel.getPort()));
                 txtRefresh.setText(String.valueOf(newSel.getRefreshSeconds()));
@@ -638,13 +636,13 @@ public class PrincipalApplicationMMI extends Application {
             if (selected != null) {
                 try {
                     // Update object attributes with form inputs
-                    selected.setNom(txtNom.getText());
+                    selected.setNom(txtName.getText());
                     selected.setIp(txtIp.getText());
                     selected.setPort(Integer.parseInt(txtPort.getText()));
                     selected.setRefreshSeconds(Integer.parseInt(txtRefresh.getText()));
 
                     tablePointeuses.refresh(); // Visually refresh the table to show new name
-                    pointeuseManager.saveData(); // Save data to the serialized file
+                    timeClockManager.saveData(); // Save data to the serialized file
 
                     // save for timeclocks
                     Serialization.saveObject(selected, "timeclock_config.ser");
@@ -652,13 +650,13 @@ public class PrincipalApplicationMMI extends Application {
                     // Show success confirmation dialog
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setHeaderText(null);
-                    alert.setContentText("Configuration de la pointeuse mise à jour.");
+                    alert.setContentText("TimeClock Configuration updated");
                     alert.showAndWait();
                 } catch (NumberFormatException ex) {
                     // Show error dialog if port or refresh rate are not valid integers
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setHeaderText(null);
-                    alert.setContentText("Erreur: Le port et le délai de rafraîchissement doivent être des nombres entiers.");
+                    alert.setContentText("Error: The port number and the refresh second number must be integer ");
                     alert.showAndWait();
                 }
             }
@@ -666,7 +664,7 @@ public class PrincipalApplicationMMI extends Application {
 
         // Container to properly align the form interface
         VBox formContainer = new VBox(10,
-                new Label("Nom de la pointeuse :"), txtNom,
+                new Label("Nom de la pointeuse :"), txtName,
                 new Label("IP du serveur cible :"), txtIp,
                 new Label("Port du serveur :"), txtPort,
                 new Label("Fréquence de rafraîchissement (sec) :"), txtRefresh

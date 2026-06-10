@@ -1,11 +1,11 @@
-/**
-  * The 'serialization' class allows to serialize data and to deserialize it.
-  * It allows, for example, to save the company’s clocking or employees.
- */
-
 package Serialization;
 
 import java.io.*;
+
+/**
+ * The 'serialization' class allows to serialize data and to deserialize it.
+ * It allows, for example, to save the company’s clocking or employees.
+ */
 
 public class Serialization implements Serializable {
 

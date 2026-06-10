@@ -1,3 +1,5 @@
+package Main;
+
 import PrincipalApplication.PrincipalApplicationMMI;
 
 public class MainPrincipal {

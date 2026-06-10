@@ -1,8 +1,3 @@
-/**
- * The 'ClockingManager' class allows you to manipulate a pointer to display it live,
- * as well as save it in a file .ser.
- */
-
 package PrincipalApplication;
 
 import Check.Check;
@@ -20,6 +15,10 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
+/**
+ * The 'ClockingManager' class allows you to manipulate a pointer to display it live,
+ * as well as save it in a file .ser.
+ */
 public class ClockingManager implements Serializable {
 
     //- - - ATTRIBUTES - - -

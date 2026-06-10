@@ -1,9 +1,3 @@
-/**
- * This class 'TimeClockMMI' manage the diplay of time clock and the clocking manager.
- * The user can choose his name and send his clocking to the server so that it sends it to the main application.
- *
- */
-
 package TimeClock;
 
 import Check.CheckType;
@@ -42,6 +36,11 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+/**
+ * This class 'TimeClockMMI' manage the diplay of time clock and the clocking manager.
+ * The user can choose his name and send his clocking to the server so that it sends it to the main application.
+ *
+ */
 public class TimeClockMMI extends Application {
 
     // - - - ATTRIBUTES - - -
