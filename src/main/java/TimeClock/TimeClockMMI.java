@@ -70,6 +70,11 @@ public class TimeClockMMI extends Application {
     private static final String CONFIG_FILE = "timeclock_config.ser";
 
     /**
+     * the server folder, where the timeclock will pull the config if it exists
+     */
+    private static String sharedDirPath = "." + java.io.File.separator;
+
+    /**
      * the auth token for "secure" TCP communication
      * this will be developped further in the report but a hard-coded string
      * is a good compromise when the app is intended for the staff
@@ -142,7 +147,7 @@ public class TimeClockMMI extends Application {
         }
     }
 
-    // - - - METHODS - - - 
+    // - - - METHODS - - -
     /**
      * main for lunch the javaFx application
      * @param args : String
@@ -162,6 +167,21 @@ public class TimeClockMMI extends Application {
     @Override
     public void start(Stage primaryStage)
     {
+        try {
+            java.nio.file.Path folderConfigPath = java.nio.file.Paths.get("server_folder.txt");
+            if (java.nio.file.Files.exists(folderConfigPath)) {
+                java.util.List<String> lines = java.nio.file.Files.readAllLines(folderConfigPath);
+                if (!lines.isEmpty() && !lines.get(0).trim().isEmpty()) {
+                    sharedDirPath = lines.get(0).trim();
+                    if (!sharedDirPath.endsWith(java.io.File.separator)) {
+                        sharedDirPath += java.io.File.separator;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("can't read server_folder.txt, using default folder");
+        }
+
         // 1. Chargement de la configuration locale
         TimeClockConfig config = (TimeClockConfig) Serialization.loadObject(CONFIG_FILE);
 
@@ -174,7 +194,7 @@ public class TimeClockMMI extends Application {
         // ==================== NOUVEAU : SYNCHRONISATION AU DÉMARRAGE ====================
         // On va lire le fichier "central" du serveur pour voir s'il a été modifié par les RH
         @SuppressWarnings("unchecked")
-        List<TimeClockConfig> serverPointeuseList = (List<TimeClockConfig>) Serialization.loadObject("liste_pointeuses.ser");
+        List<TimeClockConfig> serverPointeuseList = (List<TimeClockConfig>) Serialization.loadObject(sharedDirPath + "liste_pointeuses.ser");
 
         if (serverPointeuseList != null) {
             for (TimeClockConfig serverConfig : serverPointeuseList) {
@@ -220,7 +240,7 @@ public class TimeClockMMI extends Application {
         Runnable refreshEmployees = () -> {
             @SuppressWarnings("unchecked")
             //We load the 'employees.ser' file
-            List<Employee> employeeList = (List<Employee>) Serialization.loadObject("employees.ser");
+            List<Employee> employeeList = (List<Employee>) Serialization.loadObject(sharedDirPath + "employees.ser");
             if (employeeList != null && !employeeList.isEmpty())  //we check that there are employees and it's well load
             {
                 //we save the employee selected
@@ -294,6 +314,52 @@ public class TimeClockMMI extends Application {
         BorderPane root = new BorderPane();
         root.setCenter(timeDisplay);
         root.setBottom(bottomBar);
+
+        Button configFolderButton = new Button("Configure server folder");
+        configFolderButton.setOnAction(event -> {
+            javafx.stage.DirectoryChooser directoryChooser = new javafx.stage.DirectoryChooser();
+            directoryChooser.setTitle("Choisir le dossier partagé du serveur");
+
+            // On ouvre le sélecteur là où pointe actuellement l'application
+            java.io.File currentFolder = new java.io.File(sharedDirPath);
+            if (currentFolder.exists() && currentFolder.isDirectory()) {
+                directoryChooser.setInitialDirectory(currentFolder);
+            }
+
+            // Affichage de la boîte de dialogue
+            java.io.File selectedDirectory = directoryChooser.showDialog(primaryStage);
+            if (selectedDirectory != null) {
+                String pathStr = selectedDirectory.getAbsolutePath();
+                if (!pathStr.endsWith(java.io.File.separator)) {
+                    pathStr += java.io.File.separator;
+                }
+                sharedDirPath = pathStr;
+
+                // Sauvegarde locale dans le fichier texte pour le prochain démarrage
+                try {
+                    java.nio.file.Files.write(
+                            java.nio.file.Paths.get("server_folder.txt"),
+                            java.util.Collections.singletonList(sharedDirPath)
+                    );
+
+                    // Notification de succès
+                    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+                    alert.setTitle("Configuration enregistrée");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Dossier serveur configuré :\n" + sharedDirPath + "\n\nVeuillez redémarrer l'application pour appliquer les changements.");
+                    alert.showAndWait();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        // button on top right
+        HBox topBar = new HBox(10);
+        topBar.setPadding(new Insets(10));
+        topBar.setAlignment(Pos.TOP_RIGHT);
+        topBar.getChildren().add(configFolderButton);
+        root.setTop(topBar);
 
         //manage the event on the check button
         checkButton.setOnAction(event -> {
