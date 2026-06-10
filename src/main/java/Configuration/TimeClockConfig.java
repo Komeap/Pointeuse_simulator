@@ -49,32 +49,68 @@ public class TimeClockConfig implements Serializable {
     }
     //- - - GETTER & SETTER - - -
 
+    /**
+     * returns the ID of a timeclock
+     * @return id : UUID
+     */
     public UUID getId() { return id; }
 
+    /**
+     * returns the name of a timeclock
+     * @return name : String
+     */
     public String getName() { return name; }
 
+    /**
+     * sets the name of a timeclock
+     * @param name : String
+     */
     public void setName(String name) { this.name = this.name; }
 
+    /**
+     * returns the name of a timeclock
+     * @return ip : String
+     */
     public String getIp() {
         return ip;
     }
 
+    /**
+     * sets the ip of a timeclock
+     * @param ip : String
+     */
     public void setIp(String ip) {
         this.ip = ip;
     }
 
+    /**
+     * returns the port of a timeclock
+     * @return port : int
+     */
     public int getPort() {
         return port;
     }
 
+    /**
+     * sets the port of a timeclock
+     * @param port : int
+     */
     public void setPort(int port) {
         this.port = port;
     }
 
+    /**
+     * returns the refreshSeconds of a timeclock
+     * @return refreshSeconds : int
+     */
     public int getRefreshSeconds() {
         return refreshSeconds;
     }
 
+    /**
+     * sets the refreshSeconds of a timeclock
+     * @param refreshSeconds : int
+     */
     public void setRefreshSeconds(int refreshSeconds) {
         this.refreshSeconds = refreshSeconds;
     }

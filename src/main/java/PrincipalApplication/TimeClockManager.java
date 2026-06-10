@@ -16,7 +16,7 @@ public class TimeClockManager {
 
     public TimeClockManager() {
         pointeuseList = FXCollections.observableArrayList();
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked") // load config
         List<TimeClockConfig> loaded = (List<TimeClockConfig>) Serialization.loadObject(FILE_NAME);
         if (loaded != null) {
             pointeuseList.addAll(loaded);
@@ -27,7 +27,7 @@ public class TimeClockManager {
         return pointeuseList;
     }
 
-    // Ajoute la pointeuse si c'est la première fois qu'elle communique
+    // adds the timeclock if it's its first time
     public synchronized void registerPointeuseIfNotExists(UUID id) {
         boolean exists = pointeuseList.stream().anyMatch(p -> p.getId().equals(id));
         if (!exists) {

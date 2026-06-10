@@ -168,10 +168,11 @@ public class TimeClockMMI extends Application {
     public void start(Stage primaryStage)
     {
         try {
+            // try to open server_folder.txt
             java.nio.file.Path folderConfigPath = java.nio.file.Paths.get("server_folder.txt");
             if (java.nio.file.Files.exists(folderConfigPath)) {
-                java.util.List<String> lines = java.nio.file.Files.readAllLines(folderConfigPath);
-                if (!lines.isEmpty() && !lines.get(0).trim().isEmpty()) {
+                java.util.List<String> lines = java.nio.file.Files.readAllLines(folderConfigPath); // if it's valid, read
+                if (!lines.isEmpty() && !lines.get(0).trim().isEmpty()) { // +-parsing
                     sharedDirPath = lines.get(0).trim();
                     if (!sharedDirPath.endsWith(java.io.File.separator)) {
                         sharedDirPath += java.io.File.separator;
@@ -182,41 +183,38 @@ public class TimeClockMMI extends Application {
             System.out.println("can't read server_folder.txt, using default folder");
         }
 
-        // 1. Chargement de la configuration locale
+        // getting local config
         TimeClockConfig config = (TimeClockConfig) Serialization.loadObject(CONFIG_FILE);
 
-        // Si aucune configuration n'existe, on la crée avec un nouvel UUID
+        // if no config exists, we create one
         if (config == null) {
             config = new TimeClockConfig(UUID.randomUUID(), "Pointeuse Entrée", "localhost", 5005, 5);
             Serialization.saveObject(config, CONFIG_FILE);
         }
 
-        // ==================== NOUVEAU : SYNCHRONISATION AU DÉMARRAGE ====================
-        // On va lire le fichier "central" du serveur pour voir s'il a été modifié par les RH
+        // we read the main server file to see if it's been modified
         @SuppressWarnings("unchecked")
         List<TimeClockConfig> serverPointeuseList = (List<TimeClockConfig>) Serialization.loadObject(sharedDirPath + "liste_pointeuses.ser");
 
         if (serverPointeuseList != null) {
             for (TimeClockConfig serverConfig : serverPointeuseList) {
-                // Si on trouve notre UUID dans la liste du serveur, on écrase notre config locale avec la sienne !
+                // if our uuid is on the list, we erase our config and replace it
                 if (serverConfig.getId().equals(config.getId())) {
                     config = serverConfig;
-                    Serialization.saveObject(config, CONFIG_FILE); // On met à jour notre fichier local
+                    Serialization.saveObject(config, CONFIG_FILE);
                     System.out.println("Configuration synchronisée depuis le serveur au démarrage !");
-                    break; // On a trouvé notre pointeuse, on arrête de chercher
+                    break;
                 }
             }
         }
-        // =================================================================================
 
-        // 2. Application de la bonne configuration aux variables
+        // applying config
         final UUID myPointeuseId = config.getId();
         serverIp = config.getIp();
         serverPort = config.getPort();
         refreshSeconds = config.getRefreshSeconds();
 
-        // 3. Lancement des tâches de fond (Watcher et Thread d'envoi)
-        // C'est mieux de lancer le Watcher APRÈS la synchronisation pour éviter des bugs
+        // starting background tasks
         startConfigWatcher();
         startThread();
 
@@ -318,15 +316,15 @@ public class TimeClockMMI extends Application {
         Button configFolderButton = new Button("Configure server folder");
         configFolderButton.setOnAction(event -> {
             javafx.stage.DirectoryChooser directoryChooser = new javafx.stage.DirectoryChooser();
-            directoryChooser.setTitle("Choisir le dossier partagé du serveur");
+            directoryChooser.setTitle("Choose the shared server folder:");
 
-            // On ouvre le sélecteur là où pointe actuellement l'application
+            // we open the selector where the app is
             java.io.File currentFolder = new java.io.File(sharedDirPath);
             if (currentFolder.exists() && currentFolder.isDirectory()) {
                 directoryChooser.setInitialDirectory(currentFolder);
             }
 
-            // Affichage de la boîte de dialogue
+            // dialog box display
             java.io.File selectedDirectory = directoryChooser.showDialog(primaryStage);
             if (selectedDirectory != null) {
                 String pathStr = selectedDirectory.getAbsolutePath();
@@ -335,18 +333,18 @@ public class TimeClockMMI extends Application {
                 }
                 sharedDirPath = pathStr;
 
-                // Sauvegarde locale dans le fichier texte pour le prochain démarrage
+                // local save in the text file for the next startup
                 try {
                     java.nio.file.Files.write(
                             java.nio.file.Paths.get("server_folder.txt"),
                             java.util.Collections.singletonList(sharedDirPath)
                     );
 
-                    // Notification de succès
+                    // ok ! notification
                     javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
-                    alert.setTitle("Configuration enregistrée");
+                    alert.setTitle("Config saved !");
                     alert.setHeaderText(null);
-                    alert.setContentText("Dossier serveur configuré :\n" + sharedDirPath + "\n\nVeuillez redémarrer l'application pour appliquer les changements.");
+                    alert.setContentText("Server folder configured :\n" + sharedDirPath + "\n\nPlease restart the app to apply changes.");
                     alert.showAndWait();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -431,9 +429,17 @@ public class TimeClockMMI extends Application {
         primaryStage.show(); //we display
     }
 
+    /**
+     * This method monitors the configuration file and automatically reloads it
+     * whenever it is modified.
+     * It uses a WatchService running in a background daemon thread to detect
+     * changes on the configuration file and apply the new settings without
+     * restarting the application.
+     */
     private void startConfigWatcher() {
         Thread watcher = new Thread(() -> {
             try {
+                //
                 java.nio.file.Path path = java.nio.file.Paths.get(CONFIG_FILE);
                 java.nio.file.Path dir = path.getParent() != null ? path.getParent() : java.nio.file.Paths.get(".");
 
@@ -454,7 +460,7 @@ public class TimeClockMMI extends Application {
                             String fileName = event.context().toString();
 
                             if (fileName.equals(CONFIG_FILE)) {
-                                System.out.println("Config modifiée, rechargement...");
+                                System.out.println("confi modified, reloading...");
 
                                 TimeClockConfig newConfig =
                                         (TimeClockConfig) Serialization.loadObject(CONFIG_FILE);
@@ -478,12 +484,19 @@ public class TimeClockMMI extends Application {
         watcher.start();
     }
 
+    /**
+     * This method applies the new configuration loaded from the configuration file.
+     * It updates the server IP address, the server port and the refresh interval
+     * used by the time clock.
+     *
+     * @param config : TimeClockConfig : the new configuration to apply
+     */
     private void applyConfig(TimeClockConfig config) {
         setServerIp(config.getIp());
         setServerPort(config.getPort());
         setRefreshSeconds(config.getRefreshSeconds());
 
-        System.out.println("Nouvelle config appliquée : " + config.getIp() + ":" + config.getPort() + " refresh=" + config.getRefreshSeconds());
+        System.out.println("new config apply : " + config.getIp() + ":" + config.getPort() + " refresh=" + config.getRefreshSeconds());
     }
 
     /**

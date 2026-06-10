@@ -88,7 +88,7 @@ public class PrincipalApplicationMMI extends Application {
 
         //Default configuration if no configuration exists.
         if (config == null) {
-            config = new TimeClockConfig(UUID.randomUUID(), "Pointeuse Par Défaut", "localhost", 5005, 5);
+            config = new TimeClockConfig(UUID.randomUUID(), "Default TimeClock", "localhost", 5005, 5);
         }
         /* ==================== NAVBAR ==================== */
 
@@ -300,16 +300,16 @@ public class PrincipalApplicationMMI extends Application {
         // UI elements
         ComboBox<Employee> filterEmployee = new ComboBox<>();
         filterEmployee.setItems(employeeManager.getEmployeeList());
-        filterEmployee.setPromptText("Filtrer par employé");
+        filterEmployee.setPromptText("Filter by employee");
 
         ComboBox<Department> filterDepartment = new ComboBox<>();
         filterDepartment.setItems(departments);
-        filterDepartment.setPromptText("Filtrer par département");
+        filterDepartment.setPromptText("Filter by department");
 
         DatePicker filterDate = new DatePicker();
-        filterDate.setPromptText("Filtrer par date");
+        filterDate.setPromptText("Filter by date");
 
-        Button btnClearFilters = new Button("Réinitialiser");
+        Button btnClearFilters = new Button("Reset");
 
         // horizontal bar to align data
         HBox filterBar = new HBox(10, filterEmployee, filterDepartment, filterDate, btnClearFilters);
@@ -438,7 +438,7 @@ public class PrincipalApplicationMMI extends Application {
 
             if (selectedFile != null) {
                 clockingManager.importFromCSV(selectedFile);
-                Alert alert = new Alert(Alert.AlertType.INFORMATION, "Importation terminée.");
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "Importation ended");
                 alert.show();
             }
         });

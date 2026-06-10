@@ -35,7 +35,7 @@ class TimeClockHandler implements Runnable {
 
             // verification of the safety token
             if (messageReceived.getSecurityToken() == null || !messageReceived.getSecurityToken().equals(EXPECTED_TOKEN)) {
-                System.out.println("connexion rejetée: signature invalide depuis " + s.getInetAddress());
+                System.out.println("connexion rejected: invalid signature from " + s.getInetAddress());
                 return;
             }
 
@@ -43,11 +43,10 @@ class TimeClockHandler implements Runnable {
                     .anyMatch(e -> e.getEmployeeId().equals(messageReceived.getIdEmp()));
 
             if (!employeeExists) {
-                System.out.println("Pointage rejeté : Employé inconnu (" + messageReceived.getIdEmp() + ")");
-                return; // On arrête là, le pointage n'est jamais enregistré
+                System.out.println("Check rejected : Unknown employee (" + messageReceived.getIdEmp() + ")");
+                return; // we stop there, the check is never registered
             }
 
-            // NOUVEAU : On enregistre la pointeuse si elle n'existe pas encore dans notre fichier
             timeClockManager.registerPointeuseIfNotExists(messageReceived.getPointeuseId());
 
             // We calcul automatically if the check is IN or OUT
@@ -61,10 +60,10 @@ class TimeClockHandler implements Runnable {
             clockingManager.addClocking(newCheck);
 
             // we inform the user that we have received the check
-            System.out.println("Pointage reçu de l'employé " + messageReceived.getIdEmp() + " via la pointeuse " + messageReceived.getPointeuseId());
+            System.out.println("Check received of employee " + messageReceived.getIdEmp() + " from the timeclock " + messageReceived.getPointeuseId());
 
         } catch (Exception error) {
-            System.out.println("Erreur réception pointage : " + error.getMessage());
+            System.out.println("Error reception check : " + error.getMessage());
         }
     }
 }

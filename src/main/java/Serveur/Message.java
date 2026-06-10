@@ -19,11 +19,11 @@ public class Message implements Serializable
      * attributes that we will receive from the time clock
      */
     private UUID idEmp; /** id of employee who has clocked */
-private CheckType type; /** type of check (IN or OUT) */
-private LocalDateTime date; /** date and hours of clocking */
+    private CheckType type; /** type of check (IN or OUT) */
+    private LocalDateTime date; /** date and hours of clocking */
 
-private String securityToken; /**security token for a secured TCP */
-private UUID pointeuseId; /**UUID for multi timeclock management */
+    private String securityToken; /**security token for a secured TCP */
+    private UUID pointeuseId; /**UUID for multi timeclock management */
 
     //- - - CONSTRUCTOR - - -
     /**
@@ -31,6 +31,8 @@ private UUID pointeuseId; /**UUID for multi timeclock management */
      * @param id : UUID
      * @param checkType : CheckType
      * @param date : LocalDateTime
+     * @param sToken : String
+     * @param pointeuseId : UUID
      */
     public Message(UUID id, CheckType checkType, LocalDateTime date, String sToken, UUID pointeuseId)
     {
@@ -64,5 +66,9 @@ private UUID pointeuseId; /**UUID for multi timeclock management */
      */
     public LocalDateTime getDate() { return date; }
 
+    /**
+     * getter for security token
+     * @return
+     */
     public String getSecurityToken() { return securityToken;}
 }

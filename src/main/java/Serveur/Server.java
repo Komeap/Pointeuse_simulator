@@ -59,7 +59,7 @@ public class Server {
 
             try {
                 serverSocket = new ServerSocket(PORT); //Initialisation socket server port
-                System.out.println("Serveur lancé sur le port " + PORT); //We say to the user that the socket server is lunched
+                System.out.println("Server started on the port " + PORT); //We say to the user that the socket server is lunched
 
                 //we keep the server running in a loop as long as the program is running so that we can listen continuously
                 while (true) {
