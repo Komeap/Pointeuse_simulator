@@ -20,3 +20,15 @@ javafx {
 dependencies {
     // Ajouter les librairies et les dépendance ici !!!
 }
+
+task runPointeuse(type: JavaExec) {
+    group = 'application'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'Main'
+}
+
+task runAdmin(type: JavaExec) {
+    group = 'application'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'MainPrincipal'
+}
