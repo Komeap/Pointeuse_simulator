@@ -592,7 +592,7 @@ public class PrincipalApplicationMMI extends Application {
 
         // Column for the time clock human-readable name
         TableColumn<TimeClockConfig, String> colNomPointeuse = new TableColumn<>("Name");
-        colNomPointeuse.setCellValueFactory(new PropertyValueFactory<>("neame"));
+        colNomPointeuse.setCellValueFactory(new PropertyValueFactory<>("name"));
 
         tablePointeuses.getColumns().addAll(colUUID, colNomPointeuse);
         tablePointeuses.setItems(timeClockManager.getPointeuseList()); // Bind table to the observable list
@@ -623,7 +623,7 @@ public class PrincipalApplicationMMI extends Application {
                 btnSaveConfig.setDisable(false);
 
                 // Populate text fields with the selected time clock's data
-                txtName.setText(newSel.getNom());
+                txtName.setText(newSel.getName());
                 txtIp.setText(newSel.getIp());
                 txtPort.setText(String.valueOf(newSel.getPort()));
                 txtRefresh.setText(String.valueOf(newSel.getRefreshSeconds()));
@@ -636,7 +636,7 @@ public class PrincipalApplicationMMI extends Application {
             if (selected != null) {
                 try {
                     // Update object attributes with form inputs
-                    selected.setNom(txtName.getText());
+                    selected.setName(txtName.getText());
                     selected.setIp(txtIp.getText());
                     selected.setPort(Integer.parseInt(txtPort.getText()));
                     selected.setRefreshSeconds(Integer.parseInt(txtRefresh.getText()));
@@ -664,10 +664,10 @@ public class PrincipalApplicationMMI extends Application {
 
         // Container to properly align the form interface
         VBox formContainer = new VBox(10,
-                new Label("Nom de la pointeuse :"), txtName,
-                new Label("IP du serveur cible :"), txtIp,
-                new Label("Port du serveur :"), txtPort,
-                new Label("Fréquence de rafraîchissement (sec) :"), txtRefresh
+                new Label("TimeClock Name :"), txtName,
+                new Label("Ip of the server to send :"), txtIp,
+                new Label("Port og the server :"), txtPort,
+                new Label("Refresh seconds :"), txtRefresh
         );
         formContainer.setPadding(new Insets(10, 0, 10, 0));
 
@@ -677,7 +677,6 @@ public class PrincipalApplicationMMI extends Application {
                 parameterTitle,
                 tablePointeuses,
                 new Separator(),
-                new Label("Modifier la pointeuse sélectionnée :"),
                 formContainer,
                 btnSaveConfig
         );

@@ -32,7 +32,7 @@ public class TimeClockConfig implements Serializable {
     /**
      * timeclock name
      */
-    private String nom;
+    private String name;
 
     /**
      * Constructor.
@@ -40,9 +40,9 @@ public class TimeClockConfig implements Serializable {
      * @param port : int
      * @param refreshSeconds : int
      */
-    public TimeClockConfig(UUID id, String nom, String ip, int port, int refreshSeconds) {
+    public TimeClockConfig(UUID id, String name, String ip, int port, int refreshSeconds) {
         this.id = id;
-        this.nom = nom;
+        this.name = name;
         this.ip = ip;
         this.port = port;
         this.refreshSeconds = refreshSeconds;
@@ -51,9 +51,9 @@ public class TimeClockConfig implements Serializable {
 
     public UUID getId() { return id; }
 
-    public String getNom() { return nom; }
+    public String getName() { return name; }
 
-    public void setNom(String name) { this.nom = nom; }
+    public void setName(String name) { this.name = this.name; }
 
     public String getIp() {
         return ip;
